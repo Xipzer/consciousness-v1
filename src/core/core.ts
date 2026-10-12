@@ -23,6 +23,8 @@ interface ChannelState {
 
 const WARMUP_READINGS = 30
 const WARMUP_S = 60
+const NOISE_CLIP = 2
+const ref = (s: ChannelState, scale: Scale) => (scale === 'fast' ? s.prevEma.medium : s.ema.slow)
 
 export class Core {
   readonly channels: ChannelDef[]
@@ -136,8 +138,9 @@ export class Core {
 
     const warm = s.readings * s.def.periodS >= WARMUP_S && s.readings > WARMUP_READINGS
     for (const scale of ['fast', 'medium'] as const) {
-      if (warm) this.surprise(s, scale, tWall, events)
-      const dev = Math.min(Math.abs(s.ema[scale] - s.ema.slow), 10 * this.devSd(s, scale))
+      const z = warm ? this.surprise(s, scale, tWall, events) : 0
+      if (z >= this.cfg.surpriseZ) continue
+      const dev = Math.min(Math.abs(s.ema[scale] - ref(s, scale)), NOISE_CLIP * this.devSd(s, scale))
       s.devVar[scale] += a(ts.slow) * (dev * dev - s.devVar[scale])
     }
     s.ema.slow += a(ts.slow) * (r.value - s.ema.slow)
@@ -174,9 +177,9 @@ export class Core {
     return Math.max(Math.sqrt(s.devVar[scale]), this.sigma(s) * Math.sqrt(al / (2 - al)))
   }
 
-  private surprise(s: ChannelState, scale: Scale, tWall: number, events: CoreEvent[]) {
+  private surprise(s: ChannelState, scale: Scale, tWall: number, events: CoreEvent[]): number {
     const se = this.devSd(s, scale)
-    const delta = s.ema[scale] - s.ema.slow
+    const delta = s.ema[scale] - ref(s, scale)
     const z = Math.abs(delta) / se
     if (s.armed[scale] && z >= this.cfg.surpriseZ) {
       s.armed[scale] = false
@@ -185,6 +188,7 @@ export class Core {
       }, s.def.gain))
     }
     if (!s.armed[scale] && z < this.cfg.surpriseZ / 2) s.armed[scale] = true
+    return z
   }
 
   private checkStale(s: ChannelState, tMono: number, tWall: number, events: CoreEvent[]) {
@@ -210,7 +214,7 @@ export class Core {
   }
 
   private event(kind: EventKind, tWall: number, f: Partial<CoreEvent>, gain = 1): CoreEvent {
-    const sig = `${kind}:${f.channel ?? '*'}:${f.direction ?? 0}`
+    const sig = `${kind}:${f.channel ?? '*'}`
     const now = tWall
     const hab = this.habituation.get(sig) ?? { h: 1, t: now }
     const recovered = 1 - (1 - hab.h) * Math.exp(-(now - hab.t) / this.cfg.habituationRecoverS)

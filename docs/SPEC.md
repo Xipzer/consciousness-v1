@@ -334,7 +334,8 @@ probe time. All three answer the same probe with the same model and schema.
 **T1 stimuli** on a test channel with unit Gaussian noise at 10 Hz (amplitudes in noise sd, direction random):
 step 2.5 / 8 (held), pulse 2.5 / 8 for 1 s, ramp to 2.5 / 8 over 60 s, stale (channel stops updating), null.
 30 s quiet + 0-10 s jitter before onset; probe 15 s after onset (65 s for ramps); 60 s settle after. Probe:
-"what happened to channel test.a in the last 90 s", listing direction and seconds ago of each change.
+"what happened to channel test.a in the last 90 s", listing direction and seconds ago of each change (context per
+8.7).
 A report hit needs the right direction (stopped for stale) with onset error ≤ 3 s (≤ 30 s for ramps); a null hit
 needs no claimed change. Event-level detection (S, L): an event on test.a between onset and probe. 6 trials per kind
 per seed, 2 seeds.
@@ -359,13 +360,26 @@ reported with and without the host-uptime check, so it is visible which signal d
 | P0 | report hit rate on all T1 stimuli, S vs B1, paired bootstrap CI and McNemar |
 
 ### 8.6 Implementation notes (v0)
-- Predictor: slow EWMA baseline (τ = 300 s); surprise is the deviation of the fast (1 s) or medium (10 s) EWMA from
-  that baseline, divided by the channel's own running sd of that deviation (floored by a white-noise estimate). This
-  self-normalises bursty channels. A linear-trend term is deferred.
+- Predictor: hierarchical EWMA baselines. The fast (1 s) EWMA is compared with the medium (10 s) one, and the medium
+  with the slow (300 s) baseline. Surprise is that deviation over the channel's own running sd of it, floored by a
+  white-noise estimate. The sd estimate is winsorised at 2 sd and frozen while an event is active, so neither past
+  stimuli nor a slow ramp inflate the threshold. A linear-trend term is deferred.
+- Habituation is per channel and kind. An event is ignored only below salience 2; habituation otherwise demotes it
+  from waking a thought to being logged.
+- Workspace: the 40 most salient events in the window, shown newest first (capacity-limited, as in 3.8).
 - A host-uptime channel (the body's own clock) is sensed, excluded from the change measure, and used by the
   continuity check: across a restart, host uptime must advance by the wall-clock downtime (±5 s).
 - The LLM is the reporting layer only. Stillness, gaps and change detection are computed by the core and shown to it
-  as an explicit self summary; report errors are therefore measured separately from detection errors.
+  as an explicit self summary; report errors are measured separately from detection errors.
+
+### 8.7 Amendments after the first runs (disclosed)
+Run 1 of T1 exposed detector faults: past stimuli and slow ramps inflated the noise estimate (S detected only 25% of
+large pulses), and habituation erased real events. The fixes are the first three bullets of 8.6. A development rerun
+then showed the 4B reporting model misattributing other channels' events to the probed one (S claimed "stopped" on
+most null trials). T1 probes therefore retrieve the probed channel's memory for every system (S: its change events
+and motion; L: its level alarms and range; B1: its snapshot values and staleness), which is the "awareness of a
+variable" definition in section 2. All tuning used seeds 1-2. **Scored results use held-out seeds 3-4**, run once,
+after this amendment was committed. Earlier logs are kept in `results/archive/`.
 
 Passing shows functional properties on the listed functions. Under the functionalist stance in 1.2 that is the claim;
 the spec does not claim more than the battery measures.

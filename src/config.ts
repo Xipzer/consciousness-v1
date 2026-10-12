@@ -32,7 +32,7 @@ export const loadConfig = (overrides: Partial<Config> = {}): Config => ({
   mode: (process.env.CV1_MODE as Mode) ?? 'full',
   timescalesS: { fast: 1, medium: 10, slow: 300 },
   surpriseZ: 4,
-  logSalience: 4,
+  logSalience: 2,
   wakeSalience: 8,
   habituationDecay: 0.5,
   habituationRecoverS: 60,

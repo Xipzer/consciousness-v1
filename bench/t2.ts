@@ -12,6 +12,7 @@ const POST_Q = QUESTION
 
 const url = process.env.CV1_LLM_URL ?? ''
 const seeds = arg('seeds', 2)
+const seed0 = arg('seed0', 1)
 const reps = arg('reps', 3)
 const limit = arg('limit', Infinity)
 const out = results('t2')
@@ -22,7 +23,7 @@ const within = (x: number | null | undefined, truth: number) => typeof x === 'nu
 
 let items = 0
 const rows: Record<string, any>[] = []
-for (let seed = 1; seed <= seeds && items < limit; seed++) {
+for (let seed = seed0; seed < seed0 + seeds && items < limit; seed++) {
   const r = rng(seed + 50)
   const noise = rng(seed * 1000 + 99)
   const rig = new Rig(bg, seed + 50)

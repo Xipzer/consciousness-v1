@@ -2,7 +2,7 @@ import { loadConfig } from '../src/config.ts'
 import { Core } from '../src/core/core.ts'
 import type { CoreEvent, Latest, TickOut } from '../src/core/types.ts'
 import { chat } from '../src/mind/llm.ts'
-import { ask, renderFull, renderLevelOnly, renderSnapshots, type Snapshot, SYSTEM } from '../src/mind/prompt.ts'
+import { ask, renderFocus, renderFull, renderLevelOnly, renderSnapshots, type Snapshot, SYSTEM } from '../src/mind/prompt.ts'
 import { ALL_CHANNELS } from '../src/senses/channels.ts'
 import { type Background, Replay } from './lib.ts'
 
@@ -79,8 +79,16 @@ export class Rig {
     return { tWall: this.wall, values, stale }
   }
 
-  context(sys: System, windowS: number) {
+  context(sys: System, windowS: number, focus?: string) {
     const now = this.wall
+    if (focus) {
+      if (sys === 'S') return renderFocus('S', this.S.selfModel(now), this.S.recent, focus, now, windowS)
+      if (sys === 'L') return renderFocus('L', this.L.selfModel(now), this.L.recent, focus, now, windowS)
+      const i = this.names.indexOf(focus)
+      const snaps = [...this.snaps.filter((s) => now - s.tWall <= windowS), this.snapshot()]
+        .map((s) => ({ tWall: s.tWall, values: [s.values[i] ?? Number.NaN], stale: s.stale.filter((x) => x.startsWith(focus)) }))
+      return renderSnapshots([focus], snaps, now)
+    }
     if (sys === 'S') return renderFull(this.S.selfModel(now), this.S.recent, now, windowS)
     if (sys === 'L') return renderLevelOnly(this.L.selfModel(now), this.L.recent, now, windowS)
     const seen = this.names.map((n) => this.latest.has(n))
@@ -91,8 +99,8 @@ export class Rig {
   }
 }
 
-export const probe = async <T>(url: string, rig: Rig, sys: System, question: string, windowS: number, seed: number, schema: object) => {
-  const prompt = ask(rig.context(sys, windowS), question)
+export const probe = async <T>(url: string, rig: Rig, sys: System, question: string, windowS: number, seed: number, schema: object, focus?: string) => {
+  const prompt = ask(rig.context(sys, windowS, focus), question)
   const r = await chat({ url, system: SYSTEM, user: prompt, schema, seed, temperature: 0, maxTokens: 300 }).catch((e: Error) => e)
   if (r instanceof Error) {
     console.error(`probe ${sys} failed: ${r.message.slice(0, 200)}`)

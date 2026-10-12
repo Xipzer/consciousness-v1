@@ -20,6 +20,7 @@ test.a did not change beyond its normal noise.`
 
 const url = process.env.CV1_LLM_URL ?? ''
 const seeds = arg('seeds', 2)
+const seed0 = arg('seed0', 1)
 const reps = arg('reps', 6)
 const limit = arg('limit', Infinity)
 const out = results('t1')
@@ -48,7 +49,7 @@ const grade = (kind: Kind, dir: number, report: ChannelReport | null, trueAgo: n
 
 let items = 0
 const all: Record<string, unknown>[] = []
-for (let seed = 1; seed <= seeds && items < limit; seed++) {
+for (let seed = seed0; seed < seed0 + seeds && items < limit; seed++) {
   const r = rng(seed)
   const noise = rng(seed * 1000 + 7)
   const rig = new Rig(bg, seed)
@@ -77,7 +78,9 @@ for (let seed = 1; seed <= seeds && items < limit; seed++) {
         ? { detected: relevant.length === 0 && pre.length === 0, latency: null }
         : { detected: relevant.length > 0, latency: relevant.length ? relevant[0]!.tWall - onsetWall : null }
     }
-    const reports = await Promise.all(SYSTEMS.map((sys) => probe<ChannelReport>(url, rig, sys, QUESTION, WINDOW_S, seed * 100 + ti, CHANNEL_SCHEMA)))
+    const eventsOnly = process.argv.includes('--events-only')
+    const empty = { report: null, raw: '', tokens: 0, ms: 0, meanLogprob: Number.NaN, promptChars: 0 }
+    const reports = eventsOnly ? SYSTEMS.map(() => empty) : await Promise.all(SYSTEMS.map((sys) => probe<ChannelReport>(url, rig, sys, QUESTION, WINDOW_S, seed * 100 + ti, CHANNEL_SCHEMA, 'test.a')))
     const row: Record<string, unknown> = { seed, trial: ti, kind, dir, trueAgo: +trueAgo.toFixed(2) }
     SYSTEMS.forEach((sys, i) => {
       const p = reports[i]!

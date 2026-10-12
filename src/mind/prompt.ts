@@ -76,6 +76,15 @@ export interface StillReport {
 
 const f = (x: number) => (Math.abs(x) >= 1000 || (Math.abs(x) < 0.01 && x !== 0) ? x.toExponential(2) : +x.toFixed(3))
 
+export const WORKSPACE_ITEMS = 40
+
+const workspace = (events: CoreEvent[], nowWall: number, windowS: number) =>
+  events
+    .filter((e) => nowWall - e.tWall <= windowS && e.decision !== 'ignore')
+    .sort((a, b) => b.salience - a.salience)
+    .slice(0, WORKSPACE_ITEMS)
+    .sort((a, b) => b.tWall - a.tWall)
+
 const renderEvent = (e: CoreEvent, nowWall: number) => {
   const ago = (nowWall - e.tWall).toFixed(1)
   const parts = [`${ago}s ago`, e.kind]
@@ -116,8 +125,8 @@ export const renderFull = (self: SelfModel, events: CoreEvent[], nowWall: number
     ...Object.entries(self.body).map(
       ([k, v]) => `  ${k}: ${f(v.value)} | ${f(v.baseline)} | ${f(v.velocityFast)} | ${f(v.velocityMedium)} | ${f(v.sigma)}`,
     ),
-    `events in the last ${windowS}s (newest first):`,
-    ...events.filter((e) => nowWall - e.tWall <= windowS && e.decision !== 'ignore').reverse().slice(0, 60).map((e) => renderEvent(e, nowWall)),
+    `most salient events in the last ${windowS}s (newest first):`,
+    ...workspace(events, nowWall, windowS).map((e) => renderEvent(e, nowWall)),
   ]
   return lines.join('\n')
 }
@@ -128,8 +137,8 @@ export const renderLevelOnly = (self: SelfModel, events: CoreEvent[], nowWall: n
     `uptime_s: ${self.uptimeS.toFixed(1)}  tick: ${self.tick}`,
     'body (channel: value | normal level | normal sd):',
     ...Object.entries(self.body).map(([k, v]) => `  ${k}: ${f(v.value)} | ${f(v.baseline)} | ${f(v.sigma)}`),
-    `level alarms in the last ${windowS}s (newest first):`,
-    ...events.filter((e) => nowWall - e.tWall <= windowS && e.decision !== 'ignore').reverse().slice(0, 60).map((e) => renderEvent(e, nowWall)),
+    `most salient level alarms in the last ${windowS}s (newest first):`,
+    ...workspace(events, nowWall, windowS).map((e) => renderEvent(e, nowWall)),
   ]
   return lines.join('\n')
 }
@@ -150,3 +159,22 @@ export const renderSnapshots = (channels: string[], snaps: Snapshot[], nowWall: 
 }
 
 export const ask = (context: string, question: string) => `${context}\n\nQUESTION: ${question}`
+
+export const renderFocus = (
+  sys: 'S' | 'L',
+  self: SelfModel,
+  events: CoreEvent[],
+  channel: string,
+  nowWall: number,
+  windowS: number,
+) => {
+  const v = self.body[channel]
+  const evs = events.filter((e) => e.channel === channel && nowWall - e.tWall <= windowS && e.decision !== 'ignore').reverse()
+  const head = [`now: ${new Date(nowWall * 1000).toISOString()}`, `memory retrieved for channel ${channel}:`]
+  if (!v) return [...head, '  no readings'].join('\n')
+  const state = sys === 'S'
+    ? `  current: value ${f(v.value)} | baseline ${f(v.baseline)} | velocity/s over 1s ${f(v.velocityFast)} | over 10s ${f(v.velocityMedium)} | noise sd ${f(v.sigma)} | reading age ${v.age.toFixed(1)}s`
+    : `  current: value ${f(v.value)} | normal level ${f(v.baseline)} | normal sd ${f(v.sigma)} | reading age ${v.age.toFixed(1)}s`
+  const label = sys === 'S' ? 'change events' : 'level alarms'
+  return [...head, state, `  ${label} in the last ${windowS}s (newest first):`, ...(evs.length ? evs.map((e) => '  ' + renderEvent(e, nowWall)) : ['  none'])].join('\n')
+}

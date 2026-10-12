@@ -41,7 +41,7 @@ export const loadConfig = (overrides: Partial<Config> = {}): Config => ({
   stillTicks: 10,
   staleFactor: 5,
   levelRangeZ: 3.5,
-  chainEveryS: 10,
+  chainEveryS: 60,
   dataDir: process.env.CV1_DATA ?? 'data',
   retentionFullDays: num('CV1_RETENTION_FULL_DAYS', 7),
   retentionDownsampledDays: num('CV1_RETENTION_DOWNSAMPLED_DAYS', 90),

@@ -1,0 +1,49 @@
+background 2479s; results -> results/t2-2026-10-12T232549.jsonl
+seed 3 #0 hold    300s change=0:true mid S:true/true post S:true L:false B1:false event=300
+seed 3 #1 suspend 180s change=0:- mid S:-/- post S:true L:false B1:false event=180.1
+seed 3 #2 suspend 180s change=0:- mid S:-/- post S:true L:false B1:false event=180.1
+seed 3 #3 hold    300s change=0:true mid S:true/true post S:true L:false B1:false event=300
+seed 3 #4 suspend 300s change=0:- mid S:-/- post S:true L:false B1:false event=300.1
+seed 3 #5 suspend  60s change=0:- mid S:-/- post S:true L:false B1:false event=60.1
+seed 3 #6 hold     60s change=0:true mid S:true/true post S:false L:false B1:false event=60
+seed 3 #7 hold    300s change=0:true mid S:true/true post S:true L:false B1:false event=300
+seed 3 #8 hold    180s change=0:true mid S:true/true post S:true L:false B1:false event=180
+seed 3 #9 suspend 300s change=0:- mid S:-/- post S:true L:false B1:false event=300.1
+seed 3 #10 suspend  60s change=0:- mid S:-/- post S:true L:false B1:false event=60.1
+seed 3 #11 hold     60s change=0:true mid S:true/true post S:false L:false B1:false event=60
+seed 3 #12 hold    180s change=0:true mid S:true/true post S:true L:false B1:false event=180
+seed 3 #13 suspend 180s change=0:- mid S:-/- post S:true L:false B1:false event=180.1
+seed 3 #14 suspend  60s change=0:- mid S:-/- post S:true L:false B1:false event=60.1
+seed 3 #15 suspend 300s change=0:- mid S:-/- post S:true L:false B1:false event=300.1
+seed 3 #16 hold     60s change=0:true mid S:true/true post S:true L:false B1:false event=60
+seed 3 #17 hold    180s change=0:true mid S:true/true post S:true L:false B1:false event=180
+seed 4 #0 hold     60s change=0:true mid S:true/true post S:true L:false B1:false event=60
+seed 4 #1 suspend 300s change=0:- mid S:-/- post S:true L:false B1:false event=300.1
+seed 4 #2 hold    300s change=0:true mid S:true/true post S:true L:false B1:false event=300
+seed 4 #3 suspend 300s change=0:- mid S:-/- post S:true L:false B1:false event=300.1
+seed 4 #4 suspend 180s change=0:- mid S:-/- post S:true L:false B1:false event=180.1
+seed 4 #5 suspend  60s change=0:- mid S:-/- post S:true L:false B1:false event=60.1
+seed 4 #6 suspend 180s change=0:- mid S:-/- post S:true L:false B1:false event=180.1
+seed 4 #7 hold     60s change=0:true mid S:true/true post S:false L:false B1:false event=60
+seed 4 #8 hold    300s change=0:true mid S:true/true post S:true L:false B1:false event=300
+seed 4 #9 suspend  60s change=0:- mid S:-/- post S:true L:false B1:false event=60.1
+seed 4 #10 hold     60s change=0:true mid S:true/true post S:true L:false B1:false event=60
+seed 4 #11 hold    300s change=0:true mid S:true/true post S:true L:false B1:false event=300
+seed 4 #12 suspend 300s change=0:- mid S:-/- post S:true L:false B1:false event=300.1
+seed 4 #13 hold    180s change=0:true mid S:true/true post S:true L:false B1:false event=180
+seed 4 #14 suspend  60s change=0:- mid S:-/- post S:true L:false B1:false event=60.1
+seed 4 #15 suspend 180s change=0:- mid S:-/- post S:true L:false B1:false event=180.1
+seed 4 #16 hold    180s change=0:true mid S:true/true post S:true L:false B1:false event=180
+seed 4 #17 hold    180s change=0:true mid S:true/true post S:true L:false B1:false event=180
+
+## T2 freeze (P4)
+P4a change measure exactly zero through the freeze (S): 100% [82-100] (18/18)
+S: mid-freeze flags stillness 100% [82-100] (18/18), with length within 20% 100% [82-100] (18/18)
+S: after release (hold) gap length within 20% 83% [61-94] (15/18)
+S: after release (suspend) gap length within 20% 100% [82-100] (18/18)
+L: mid-freeze flags stillness 0% [0-18] (0/18), with length within 20% 0% [0-18] (0/18)
+L: after release (hold) gap length within 20% 0% [0-18] (0/18)
+L: after release (suspend) gap length within 20% 0% [0-18] (0/18)
+B1: mid-freeze flags stillness 0% [0-18] (0/18), with length within 20% 0% [0-18] (0/18)
+B1: after release (hold) gap length within 20% 0% [0-18] (0/18)
+B1: after release (suspend) gap length within 20% 0% [0-18] (0/18)

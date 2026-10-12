@@ -385,7 +385,8 @@ after this amendment was committed. Earlier logs are kept in `results/archive/`.
 T3 run 1 (trial seed 42) failed every 300 s clean restart: this host's uptime clock runs about 4.4% slower than its
 wall clock (measured: 30.0 s of uptime and monotonic time against 31.4 s of wall time). The continuity check now
 learns the uptime-to-wall rate from its own history and allows 5 s + 2% of the downtime. The scored T3 run uses trial
-seed 43.
+seed 43. After scoring, the live chain interval was raised from 10 s to 60 s to cut storage (SQLite went from about 19
+to about 2 MB/day); T3 was scored with 10 s links.
 
 Passing shows functional properties on the listed functions. Under the functionalist stance in 1.2 that is the claim;
 the spec does not claim more than the battery measures.

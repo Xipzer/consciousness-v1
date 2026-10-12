@@ -1,0 +1,11 @@
+2026-10-12T22:57:59.380Z phase idle (120s)
+2026-10-12T23:00:04.600Z phase llm-2-slots (120s)
+2026-10-12T23:02:06.181Z phase cpu-all-cores (120s)
+2026-10-12T23:04:11.695Z phase llm+cpu (120s)
+
+## T9 non-blocking tick (10 s windows from the running daemon)
+phase | windows | worst p50 ms | worst p99 ms | max ms | overruns | missed ticks
+idle | 11 | 0.067 | 1.094 | 1.094 | 0 | 0
+llm-2-slots | 10 | 0.062 | 1.169 | 1.169 | 0 | 0
+cpu-all-cores | 11 | 0.063 | 76.076 | 76.076 | 0 | 0
+llm+cpu | 11 | 0.070 | 88.030 | 88.030 | 0 | 0

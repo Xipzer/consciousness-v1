@@ -65,7 +65,10 @@ const retention = () => {
     currentKey: segment, fullDays: cfg.retentionFullDays, downsampledDays: cfg.retentionDownsampledDays,
     nowWall: Date.now() / 1000, tickHz: cfg.tickHz,
   })
-  if (r.compressed.length || r.downsampled.length || r.deleted.length) log('retention', JSON.stringify(r))
+  const now = Date.now() / 1000
+  const ev = store.db.query('DELETE FROM events WHERE t_wall < ?').run(now - cfg.retentionDownsampledDays * 86400).changes
+  const th = store.db.query('UPDATE thoughts SET prompt = NULL WHERE prompt IS NOT NULL AND t_start < ?').run(now - cfg.retentionFullDays * 86400).changes
+  if (r.compressed.length || r.downsampled.length || r.deleted.length || ev || th) log('retention', JSON.stringify({ ...r, eventsDeleted: ev, promptsDropped: th }))
 }
 setTimeout(retention, 5000)
 setInterval(retention, 10 * 60 * 1000)

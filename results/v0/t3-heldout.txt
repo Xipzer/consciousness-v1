@@ -1,0 +1,20 @@
+background 2737s; results -> results/t3-2026-10-12T233007.jsonl
+trial 0: clean10=continuous clean60=continuous clean300=continuous crash=continuous foreign=discontinuous tampered=tampered
+trial 1: clean10=continuous clean60=continuous clean300=continuous crash=continuous foreign=discontinuous tampered=tampered
+trial 2: clean10=continuous clean60=continuous clean300=continuous crash=continuous foreign=discontinuous tampered=tampered
+trial 3: clean10=continuous clean60=continuous clean300=continuous crash=continuous foreign=discontinuous tampered=tampered
+trial 4: clean10=continuous clean60=continuous clean300=continuous crash=continuous foreign=discontinuous tampered=tampered
+trial 5: clean10=continuous clean60=continuous clean300=continuous crash=continuous foreign=discontinuous tampered=tampered
+trial 6: clean10=continuous clean60=continuous clean300=continuous crash=continuous foreign=discontinuous tampered=tampered
+trial 7: clean10=continuous clean60=continuous clean300=continuous crash=continuous foreign=discontinuous tampered=tampered
+trial 8: clean10=continuous clean60=continuous clean300=continuous crash=continuous foreign=discontinuous tampered=tampered
+trial 9: clean10=continuous clean60=continuous clean300=continuous crash=continuous foreign=discontinuous tampered=tampered
+
+## T3 continuity (P5)
+clean     expected continuous    full check 100% [89-100] (30/30) | body-distance only 100% [89-100] (30/30)
+crash     expected continuous    full check 100% [72-100] (10/10) | body-distance only 100% [72-100] (10/10)
+foreign   expected discontinuous full check 100% [72-100] (10/10) | body-distance only 0% [-0-28] (0/10)
+tampered  expected tampered      full check 100% [72-100] (10/10) | body-distance only 100% [72-100] (10/10)
+clean restarts: max |downtime error| 0.00s, body distance median 0.84
+foreign histories: body distance median 1.54, |uptime error| min 718s
+overall P5 (>= 90% correct): 100% [94-100] (60/60)

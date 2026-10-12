@@ -1,0 +1,4 @@
+{"phase":"idle","windows":11,"p50":0.067,"p99":1.094,"max":1.094,"overruns":0,"missed":0}
+{"phase":"llm-2-slots","windows":10,"p50":0.062,"p99":1.169,"max":1.169,"overruns":0,"missed":0}
+{"phase":"cpu-all-cores","windows":11,"p50":0.063,"p99":76.076,"max":76.076,"overruns":0,"missed":0}
+{"phase":"llm+cpu","windows":11,"p50":0.07,"p99":88.03,"max":88.03,"overruns":0,"missed":0}

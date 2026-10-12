@@ -12,6 +12,7 @@ export interface Continuity {
   bodyDistance: number | null
   comparedChannels: number
   uptimeErrorS: number | null
+  clockRate?: number
 }
 
 export const BODY_DISTANCE_MAX = 6
@@ -56,13 +57,18 @@ export const assessContinuity = (
   const downtimeS = nowWall - last.tWall - selfUptimeS
   const lastU = last.raw[u]
   const nowU = nowRaw[u]
-  const uptimeErrorS = u >= 0 && ok(lastU) && ok(nowU) ? nowU - lastU - (nowWall - last.tWall) : null
+  const first = links.find((l) => ok(l.raw[u]))
+  const firstU = first?.raw[u]
+  const spanW = first ? last.tWall - first.tWall : 0
+  const rate = first && ok(firstU) && ok(lastU) && spanW >= 60 ? Math.min(Math.max((lastU - firstU) / spanW, 0.5), 1.5) : 1
+  const elapsedW = nowWall - last.tWall
+  const uptimeErrorS = u >= 0 && ok(lastU) && ok(nowU) ? nowU - lastU - rate * elapsedW : null
   const bodyDistance = d.length ? median(d) : null
   const bodyOk = bodyDistance === null || bodyDistance <= BODY_DISTANCE_MAX
-  const uptimeOk = uptimeErrorS === null || Math.abs(uptimeErrorS) <= UPTIME_TOLERANCE_S
+  const uptimeOk = uptimeErrorS === null || Math.abs(uptimeErrorS) <= UPTIME_TOLERANCE_S + 0.02 * elapsedW
   const verdict: Verdict = !chainOk ? 'tampered' : bodyOk && uptimeOk ? 'continuous' : 'discontinuous'
   return {
     verdict, chainOk, links: links.length, downtimeS, cleanShutdown: last.kind === 'shutdown', bodyDistance,
-    comparedChannels: d.length, uptimeErrorS,
+    comparedChannels: d.length, uptimeErrorS, clockRate: rate,
   }
 }

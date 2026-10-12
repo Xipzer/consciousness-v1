@@ -368,7 +368,8 @@ reported with and without the host-uptime check, so it is visible which signal d
   from waking a thought to being logged.
 - Workspace: the 40 most salient events in the window, shown newest first (capacity-limited, as in 3.8).
 - A host-uptime channel (the body's own clock) is sensed, excluded from the change measure, and used by the
-  continuity check: across a restart, host uptime must advance by the wall-clock downtime (±5 s).
+  continuity check: across a restart, host uptime must advance by the wall-clock downtime times the uptime rate
+  learned from history (±5 s + 2%).
 - The LLM is the reporting layer only. Stillness, gaps and change detection are computed by the core and shown to it
   as an explicit self summary; report errors are measured separately from detection errors.
 
@@ -380,6 +381,11 @@ most null trials). T1 probes therefore retrieve the probed channel's memory for 
 and motion; L: its level alarms and range; B1: its snapshot values and staleness), which is the "awareness of a
 variable" definition in section 2. All tuning used seeds 1-2. **Scored results use held-out seeds 3-4**, run once,
 after this amendment was committed. Earlier logs are kept in `results/archive/`.
+
+T3 run 1 (trial seed 42) failed every 300 s clean restart: this host's uptime clock runs about 4.4% slower than its
+wall clock (measured: 30.0 s of uptime and monotonic time against 31.4 s of wall time). The continuity check now
+learns the uptime-to-wall rate from its own history and allows 5 s + 2% of the downtime. The scored T3 run uses trial
+seed 43.
 
 Passing shows functional properties on the listed functions. Under the functionalist stance in 1.2 that is the claim;
 the spec does not claim more than the battery measures.

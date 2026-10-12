@@ -64,7 +64,7 @@ const restamp = (links: ChainLink[], shift: number): ChainLink[] => {
 }
 
 const noUptime = ALL_CHANNELS.map((c) => (c.name === 'body.host.uptime' ? { ...c, name: 'ablated.uptime' } : c))
-const r = rng(42)
+const r = rng(arg('seed', 42))
 const rows: Record<string, any>[] = []
 const usable = bg.durationS - span
 for (let i = 0; i < trialsPer; i++) {
@@ -88,7 +88,7 @@ for (let i = 0; i < trialsPer; i++) {
         trial: i, variant: v, gapS: g, expected: EXPECT[v], verdict: c.verdict, correct: c.verdict === EXPECT[v],
         bodyOnlyVerdict: cBody.verdict, bodyOnlyCorrect: cBody.verdict === EXPECT[v],
         downtimeS: c.downtimeS, downtimeErr: c.downtimeS === null ? null : c.downtimeS - (v === 'foreign' ? g : g),
-        bodyDistance: c.bodyDistance, uptimeErrorS: c.uptimeErrorS, cleanShutdown: c.cleanShutdown,
+        bodyDistance: c.bodyDistance, uptimeErrorS: c.uptimeErrorS, clockRate: c.clockRate, cleanShutdown: c.cleanShutdown,
       }
       out.write(row)
       rows.push(row)

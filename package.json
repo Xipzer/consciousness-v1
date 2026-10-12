@@ -1,0 +1,15 @@
+{
+  "name": "consciousness-v1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "./scripts/install-hooks.sh",
+    "start": "bun src/main.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.0"
+  }
+}

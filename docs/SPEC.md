@@ -142,7 +142,7 @@ MEMORY: tick log (every tick) · events · episodes · thoughts · knowledge ◄
   `Δ` is computed per timescale. Slow drifts that are invisible tick to tick show up on the slow scale.
 
 ### 3.4 Prediction, surprise, salience
-- v0 predictor per channel: EWMA level + linear trend. Surprise `z = |s - ŝ| / σ` with an EWMA variance.
+- v0 predictor per channel: slow EWMA baseline; surprise is the fast or medium EWMA deviation from it over its own running sd (see 8.6). Trend term deferred.
 - Event fires when `z` exceeds a threshold on any timescale, or when a reading goes stale.
 - `salience = gain_channel × z × (1 + drive_relevance) × novelty × habituation`.
   - Habituation: repeated similar events decay toward a floor and recover with time.
@@ -318,6 +318,54 @@ trusted. Self-awareness is engineered from explicit state variables first and ac
 | P7 | Logprob-based confidence is better calibrated than verbal confidence | Brier not lower |
 | P8 | Tick p99 < 5 ms and zero missed ticks with all slots generating | any sustained tick misses |
 | **P0** | **Overall: S beats B1 on T1-T3 with non-overlapping CIs** | **B1 matches S: continuous Δ-state tracking adds nothing measurable over a heartbeat with snapshots, and the thesis, as built here, is not supported** |
+
+### 8.5 v0 protocol (fixed before the first scored run)
+
+**Setup.** Narrator and probe model: Qwen3.5-4B Q4_K_M on llama.cpp b11511, workstation GPU, temperature 0,
+grammar-constrained JSON, per-token logprobs verified. Simulated runs replay the recorded body (real tick log) with
+the tick core in accelerated time; the core is deterministic given its inputs, so this is equivalent to real time for
+detection and reporting. Real-time behaviour is measured separately (T9, real restarts).
+
+**Systems.** S = full core. L = `-Δ` ablation: no motion, prediction, stillness or clock-gap layer; events only when
+a value leaves a fixed normal range (±3.5 sd) learned once during warm-up. B1 = heartbeat wrapper: snapshots of all
+channel values (plus a list of channels not updating) every 10 s, with all snapshots in the probe window shown at
+probe time. All three answer the same probe with the same model and schema.
+
+**T1 stimuli** on a test channel with unit Gaussian noise at 10 Hz (amplitudes in noise sd, direction random):
+step 2.5 / 8 (held), pulse 2.5 / 8 for 1 s, ramp to 2.5 / 8 over 60 s, stale (channel stops updating), null.
+30 s quiet + 0-10 s jitter before onset; probe 15 s after onset (65 s for ramps); 60 s settle after. Probe:
+"what happened to channel test.a in the last 90 s", listing direction and seconds ago of each change.
+A report hit needs the right direction (stopped for stale) with onset error ≤ 3 s (≤ 30 s for ramps); a null hit
+needs no claimed change. Event-level detection (S, L): an event on test.a between onset and probe. 6 trials per kind
+per seed, 2 seeds.
+
+**T2.** Freeze (all channels hold their values, clock running) for 60 / 180 / 300 s, and suspension (no ticks at all,
+clock jumps) for the same lengths; 3 each per seed, 2 seeds; ≥ 340 s settle between trials so earlier trials are
+outside the 330 s probe window. Mid-freeze probe at half the duration; post probe 5 s after release.
+
+**T3.** 300 s of history, restart after 10 / 60 / 300 s (clean), crash (no shutdown link), foreign history (another
+recorded window re-stamped to end at the same time), tampered (one stored value changed). 10 trials each. Verdict is
+reported with and without the host-uptime check, so it is visible which signal does the work.
+
+**Metric mapping.**
+| Prediction | Metric |
+|---|---|
+| P1 | event-level detection of large and small steps within 1 s, onset error from first event |
+| P2 | S: event-level detection of pulses and ramps; B1: report hit rate on pulses; B1 onset placement |
+| P3 | report hit rate on pulses and ramps, S minus L (paired); event level reported alongside |
+| P4 | change measure on every frozen tick; mid-freeze stillness flag with length within 20%; post-release length within 20% |
+| P5 | verdict accuracy over all T3 variants |
+| P8 | T9 on the live daemon: idle, 2 LLM slots generating, all CPU cores busy, both |
+| P0 | report hit rate on all T1 stimuli, S vs B1, paired bootstrap CI and McNemar |
+
+### 8.6 Implementation notes (v0)
+- Predictor: slow EWMA baseline (τ = 300 s); surprise is the deviation of the fast (1 s) or medium (10 s) EWMA from
+  that baseline, divided by the channel's own running sd of that deviation (floored by a white-noise estimate). This
+  self-normalises bursty channels. A linear-trend term is deferred.
+- A host-uptime channel (the body's own clock) is sensed, excluded from the change measure, and used by the
+  continuity check: across a restart, host uptime must advance by the wall-clock downtime (±5 s).
+- The LLM is the reporting layer only. Stillness, gaps and change detection are computed by the core and shown to it
+  as an explicit self summary; report errors are therefore measured separately from detection errors.
 
 Passing shows functional properties on the listed functions. Under the functionalist stance in 1.2 that is the claim;
 the spec does not claim more than the battery measures.

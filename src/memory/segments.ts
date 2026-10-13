@@ -17,11 +17,11 @@ export class SegmentWriter {
   }
 
   push(t: TickOut, tickMs: number) {
-    const key = hourKey(t.tWall)
-    if (key !== this.key) {
+    const hour = hourKey(t.tWall)
+    if (!this.key.startsWith(hour)) {
       this.flush()
-      this.key = key
-      const manifest = join(this.dir, `${key}.json`)
+      this.key = this.keyFor(hour)
+      const manifest = join(this.dir, `${this.key}.json`)
       if (!existsSync(manifest)) writeFileSync(manifest, JSON.stringify({ header: HEADER, channels: this.channels }))
     }
     const n = this.channels.length
@@ -31,6 +31,16 @@ export class SegmentWriter {
     body.set(t.values, 0)
     body.set(t.ages, n)
     this.buf.push(new Uint8Array(frame))
+  }
+
+  private keyFor(hour: string) {
+    for (let i = 0; ; i++) {
+      const key = i ? `${hour}_${i}` : hour
+      const manifest = join(this.dir, `${key}.json`)
+      if (!existsSync(manifest)) return key
+      const { channels } = JSON.parse(readFileSync(manifest, 'utf8')) as { channels: string[] }
+      if (channels.join() === this.channels.join() && !existsSync(join(this.dir, `${key}.bin.zst`))) return key
+    }
   }
 
   flush() {

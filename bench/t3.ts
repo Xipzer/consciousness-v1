@@ -16,7 +16,7 @@ const EXPECT: Record<Variant, Continuity['verdict']> = { clean: 'continuous', cr
 const trialsPer = arg('trials', 10)
 const out = results('t3')
 const bg = loadBackground()
-const cfg = loadConfig({ efference: false })
+const cfg = loadConfig({ efference: false, habituationByDirection: false })
 const span = RUN_S + Math.max(...GAPS) + WARM_S + 5
 if (bg.durationS < span * 2) throw new Error(`need ${span * 2}s of recorded background, have ${bg.durationS.toFixed(0)}s`)
 console.log(`background ${bg.durationS.toFixed(0)}s; results -> ${out.path}`)

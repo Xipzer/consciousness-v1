@@ -72,6 +72,13 @@ if (askPort && cfg.llmUrl) {
     port: askPort,
     fetch: async (req) => {
       const u = new URL(req.url)
+      if (u.pathname === '/inject' && req.method === 'POST') {
+        const channel = u.searchParams.get('channel') ?? ''
+        const value = Number(u.searchParams.get('value'))
+        if (!channel.startsWith('test.') || !Number.isFinite(value)) return new Response('bad channel or value', { status: 400 })
+        sense(channel, value)
+        return new Response('ok')
+      }
       if (u.pathname !== '/ask') return new Response('not found', { status: 404 })
       const channel = u.searchParams.get('channel') ?? ''
       const windowS = Number(u.searchParams.get('window') ?? 90)

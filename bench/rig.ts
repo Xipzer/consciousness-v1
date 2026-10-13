@@ -28,8 +28,8 @@ export class Rig {
 
   constructor(bg: Background, seed: number) {
     const id = { instanceId: `bench-${seed}`, birthWall: this.wall0 }
-    this.S = new Core(ALL_CHANNELS, loadConfig({ mode: 'full', efference: false }), id)
-    this.L = new Core(ALL_CHANNELS, loadConfig({ mode: 'no-delta', efference: false }), id)
+    this.S = new Core(ALL_CHANNELS, loadConfig({ mode: 'full', efference: false, habituationByDirection: false }), id)
+    this.L = new Core(ALL_CHANNELS, loadConfig({ mode: 'no-delta', efference: false, habituationByDirection: false }), id)
     this.replay = new Replay(bg, Math.floor((seed * 7919) % bg.frames.length))
     this.nextBeat = HEARTBEAT_S * ((seed % 10) / 10)
   }

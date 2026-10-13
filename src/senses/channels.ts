@@ -36,6 +36,6 @@ export const MIND: ChannelDef[] = [
   ch('mind.confidence', 'p', 3600, 0.01),
 ]
 
-export const TEST: ChannelDef[] = [ch('test.a', 'u', 0.1, 0.01)]
+export const TEST: ChannelDef[] = [ch('test.a', 'u', 0.1, 0.01), ch('test.live', 'u', 0.1, 0.01)]
 
 export const ALL_CHANNELS = [...BODY, ...SELF, ...BRAIN, ...MIND, ...TEST]

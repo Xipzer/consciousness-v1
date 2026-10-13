@@ -426,17 +426,35 @@ Predictions: **P9** with efference on, self-channel wakes/min outside stimuli fa
 **P10** onset and release detection stay ≥ 90% in both conditions, with 0 missed ticks. External wake rate and report
 accuracy are reported without a prediction.
 
-### 8.9 Stimulus safety limits (binding)
+### 8.9 Stimulus sizing and thermal safety
 CPU burns caused a 96 C CPU peak and up to 524 W package power on the workstation (8-thread live-bench burns; the
-earlier T9 run also loaded all 32 threads for 4 minutes). The live CPU-burn stimulus and T9's CPU phases are
-withdrawn and removed from the code. Before any physical stimulus runs again:
-- **Prefer non-thermal stimuli**: a synthetic sensor channel injected into the live loop, or small I/O pulses.
-- **CPU stimuli**: at most 2 threads, pulses of a few seconds with a duty cycle of 25% or less, and the smallest size
-  that gives a reliable signal. They run only behind a thermal guard that reads CPU package temperature and aborts
-  above 80 C. WSL exposes no CPU temperature, so no CPU stimulus runs until such a sensor exists.
-- **Every stimulus run** kills its whole process group on exit or abort, aborts if GPU temperature exceeds 80 C,
-  and is reviewed by the owner before it is run.
+earlier T9 run also loaded all 32 threads for 4 minutes). The owner's rule, which replaces an interim hard ban:
+- **Size each stimulus to what the measurement needs.** The detector registers a CPU change in about 0.4 s, so a
+  20 s, 8-thread burn was far more than necessary. Short bursts, with idle gaps between them.
+- **Avoid long, sustained all-core load** on this compact machine. Full load is fine when a test genuinely needs it,
+  briefly.
+- **Thermal abort guard as a safety net**: a stimulus run kills its whole process group if CPU package or GPU
+  temperature exceeds 80 C. CPU temperature comes from HWiNFO shared memory (`scripts/cpu-thermal.ps1`); WSL exposes
+  none. A CPU stimulus refuses to start without a CPU reading (fail closed). Synthetic stimuli need no guard.
+- **Prefer non-thermal stimuli** where they measure the same thing: the synthetic `test.live` channel, injected into
+  the live loop through the local `/inject` endpoint.
 - No memory pressure or network disruption.
+
+### 8.10 Live benchmark v0.2 (fixed before its scored run)
+Same ABBA design as 8.8 (efference on, off, off, on), with a fresh daemon per block, 90 s warm-up and 8 trials per
+block. Stimulus: `test.live` carries unit Gaussian noise at 10 Hz; each trial steps it by ±3 sd (random sign) for
+15 s after 30-45 s of quiet, then `/ask` is queried about `test.live` 8 s after release. Direction-specific
+habituation (an up event no longer habituates a later down event on the same channel) is on in every block; it is
+held constant, so it is not part of the efference comparison. CPU pulses are optional (`--cpu=THREADSxSECONDS`) and run
+only with a CPU temperature reading; they are off in this run.
+
+Metrics as in 8.8, for `test.live`. Self-channel wakes are counted both over the whole scored period and outside
+stimulus windows.
+
+Predictions: **P9b** efference on reduces self-channel wakes over the whole scored period by ≥ 50% against off.
+**P10b** onset and release of `test.live` are detected within 10 s in ≥ 90% of trials in both conditions, with 0
+missed ticks. **P11** the stimulus onset wakes a thought in ≥ 80% of trials in both conditions. Report accuracy is
+reported without a prediction.
 
 Passing shows functional properties on the listed functions. Under the functionalist stance in 1.2 that is the claim;
 the spec does not claim more than the battery measures.

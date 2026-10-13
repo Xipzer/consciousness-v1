@@ -21,6 +21,7 @@ export interface Config {
   llmUrl: string
   narrator: boolean
   efference: boolean
+  habituationByDirection: boolean
   efferenceTailS: number
   efferenceDiscount: number
   reafferent: string[]
@@ -52,6 +53,7 @@ export const loadConfig = (overrides: Partial<Config> = {}): Config => ({
   llmUrl: process.env.CV1_LLM_URL ?? '',
   narrator: process.env.CV1_NARRATOR !== '0',
   efference: process.env.CV1_EFFERENCE !== '0',
+  habituationByDirection: process.env.CV1_HAB_DIRECTION !== '0',
   efferenceTailS: 15,
   efferenceDiscount: 0.1,
   reafferent: [

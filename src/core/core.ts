@@ -241,7 +241,7 @@ export class Core {
   }
 
   private event(kind: EventKind, tWall: number, f: Partial<CoreEvent>, gain = 1): CoreEvent {
-    const sig = `${kind}:${f.channel ?? '*'}`
+    const sig = `${kind}:${f.channel ?? '*'}${this.cfg.habituationByDirection ? `:${f.direction ?? 0}` : ''}`
     const now = tWall
     const hab = this.habituation.get(sig) ?? { h: 1, t: now }
     const recovered = 1 - (1 - hab.h) * Math.exp(-(now - hab.t) / this.cfg.habituationRecoverS)

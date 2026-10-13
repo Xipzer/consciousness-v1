@@ -4,6 +4,8 @@ import { join } from 'node:path'
 import { loadConfig } from '../src/config.ts'
 import { arg, gauss, pct, results, rng } from './lib.ts'
 
+const FACTOR = process.argv.find((a) => a.startsWith('--factor='))?.slice(9) ?? 'efference'
+const HK_CHANNELS = new Set(loadConfig().housekeepingReafferent)
 const ORDER = (process.argv.find((a) => a.startsWith('--order='))?.slice(8) ?? 'on,off,off,on').split(',')
 const TRIALS = arg('trials', 8)
 const WARMUP_S = arg('warmup', 90)
@@ -31,7 +33,12 @@ const runBlock = async (block: number, cond: string) => {
   if (existsSync(dir)) rmSync(dir, { recursive: true })
   mkdirSync(dir, { recursive: true })
   const proc = Bun.spawn(['bun', 'src/main.ts'], {
-    env: { ...process.env, CV1_DATA: dir, CV1_EFFERENCE: cond === 'on' ? '1' : '0', CV1_ASK_PORT: String(PORT) },
+    env: {
+      ...process.env, CV1_DATA: dir, CV1_ASK_PORT: String(PORT),
+      ...(FACTOR === 'efference'
+        ? { CV1_EFFERENCE: cond === 'on' ? '1' : '0' }
+        : { CV1_EFFERENCE: '1', CV1_EFFERENCE_HOUSEKEEPING: cond === 'on' ? '1' : '0', CV1_HOUSEKEEPING_S: '60' }),
+    },
     stdout: Bun.file(join(dir, 'daemon.log')), stderr: 'inherit',
   })
   let level = 0
@@ -103,7 +110,12 @@ const score = (b: Awaited<ReturnType<typeof runBlock>>, cond: string) => {
   const wakes = scored.filter((e) => e.decision === 'wake')
   const selfAll = wakes.filter((e) => reafferent.has(e.channel))
   const selfOutside = selfAll.filter((e) => !inStim(e.t_wall))
+  const chores = [...log.matchAll(/^(\S+) storage:/gm)].map((m) => Date.parse(m[1]!) / 1000).filter((t) => t >= scoredFrom)
+  const afterChore = (t: number) => chores.some((c) => t >= c - 1 && t <= c + 20)
+  const hkWakes = wakes.filter((e) => HK_CHANNELS.has(e.channel) && afterChore(e.t_wall))
   const summary = {
+    factor: FACTOR, chores: chores.length, hkWakesAfterChore: hkWakes.length,
+    hkEventsAfterChore: scored.filter((e) => HK_CHANNELS.has(e.channel) && e.kind === 'change' && afterChore(e.t_wall)).length,
     cond, minutes: +minutes.toFixed(2), missed, wakes: wakes.length, selfWakesAll: selfAll.length, selfWakesOutside: selfOutside.length,
     selfWakesByChannel: Object.fromEntries([...new Set(selfAll.map((e) => e.channel))].map((c) => [c, selfAll.filter((e) => e.channel === c).length])),
     attributed: scored.filter((e) => e.attribution === 'self').length, thoughts: thoughts.filter((t) => t.t_start >= scoredFrom).length,
@@ -137,6 +149,11 @@ for (const cond of ['off', 'on']) {
       pct(rows.filter((x) => x.releaseLatency !== null).length, n), med(rows.flatMap((x) => (x.releaseLatency === null ? [] : [x.releaseLatency]))),
       pct(rows.filter((x) => x.externalWake).length, n), pct(rows.filter((x) => x.reportOnset).length, n), pct(rows.filter((x) => x.reportRelease).length, n)].join(' | '))
   }
+}
+console.log(`factor: ${FACTOR}`)
+for (const cond of ['off', 'on']) {
+  const ss = all.filter((x) => x.summary.cond === cond).map((x) => x.summary)
+  if (ss.length && FACTOR === 'housekeeping') console.log(`${cond}: chores ${ss.reduce((a, s) => a + s.chores, 0)}, housekeeping-channel events after chores ${ss.reduce((a, s) => a + s.hkEventsAfterChore, 0)}, wakes ${ss.reduce((a, s) => a + s.hkWakesAfterChore, 0)}`)
 }
 console.log('\nefference | minutes | wakes | self-channel wakes (all) | per min | self-channel wakes outside stimuli | per min | thoughts | missed ticks')
 for (const cond of ['off', 'on']) {

@@ -1,0 +1,34 @@
+2026-10-13T01:01:52.198Z block 0 efference=on: warm-up 90s
+  trial 0: burn 21.5s, report [{"direction":"up","seconds_ago":28.3},{"direction":"up","seconds_ago":28.9}]
+  trial 1: burn 21.5s, report [{"direction":"down","seconds_ago":7.3},{"direction":"up","seconds_ago":29.3}]
+  trial 2: burn 20.0s, report [{"direction":"down","seconds_ago":8.8},{"direction":"up","seconds_ago":29}]
+  trial 3: burn 20.0s, report [{"direction":"up","seconds_ago":28.9}]
+  trial 4: burn 20.0s, report [{"direction":"up","seconds_ago":29.1}]
+{"cond":"on","block":0,"minutes":7.8,"missed":0,"overruns":0,"wakesPerMin":1.4,"selfChannelWakesPerMinOutsideStimuli":0.38,"selfChannelWakesByChannel":{"self.main_lag_ms":3},"attributedEvents":138,"thoughts":10,"thoughtsPerMin":1.28}
+2026-10-13T01:11:12.685Z block 1 efference=off: warm-up 90s
+  trial 0: burn 21.4s, report [{"direction":"down","seconds_ago":7.2},{"direction":"up","seconds_ago":29.2}]
+  trial 1: burn 20.0s, report [{"direction":"down","seconds_ago":8.9},{"direction":"up","seconds_ago":29},{"direction":"up","seconds_ago":37.2}]
+  trial 2: burn 21.4s, report [{"direction":"down","seconds_ago":7.4},{"direction":"up","seconds_ago":29.1}]
+  trial 3: burn 21.6s, report [{"direction":"up","seconds_ago":28.9}]
+  trial 4: burn 21.5s, report [{"direction":"down","seconds_ago":7.2},{"direction":"up","seconds_ago":29.1}]
+{"cond":"off","block":1,"minutes":7.7,"missed":0,"overruns":0,"wakesPerMin":1.95,"selfChannelWakesPerMinOutsideStimuli":0.39,"selfChannelWakesByChannel":{"brain.gen_tok":2,"body.gpu.util":1},"attributedEvents":0,"thoughts":14,"thoughtsPerMin":1.82}
+2026-10-13T01:20:23.824Z block 2 efference=off: warm-up 90s
+  trial 0: burn 20.0s, report [{"direction":"up","seconds_ago":27.6}]
+  trial 1: burn 21.4s, report [{"direction":"down","seconds_ago":7.5},{"direction":"up","seconds_ago":29.1}]
+  trial 2: burn 20.0s, report [{"direction":"up","seconds_ago":29.2}]
+  trial 3: burn 21.4s, report [{"direction":"up","seconds_ago":29}]
+  trial 4: burn 21.5s, report [{"direction":"up","seconds_ago":29}]
+{"cond":"off","block":2,"minutes":8,"missed":0,"overruns":0,"wakesPerMin":0.87,"selfChannelWakesPerMinOutsideStimuli":0.12,"selfChannelWakesByChannel":{"self.tick_ms":1},"attributedEvents":0,"thoughts":7,"thoughtsPerMin":0.87}
+2026-10-13T01:29:56.277Z block 3 efference=on: warm-up 90s
+  trial 0: burn 21.5s, report [{"direction":"down","seconds_ago":7.6},{"direction":"up","seconds_ago":28.4},{"direction":"up","seconds_ago":29}]
+  trial 1: burn 21.4s, report []
+  trial 2: burn 20.0s, report [{"direction":"down","seconds_ago":8.4},{"direction":"up","seconds_ago":28.9}]
+  trial 3: burn 21.4s, report [{"direction":"up","seconds_ago":29.1}]
+  trial 4: burn 21.4s, report [{"direction":"up","seconds_ago":29}]
+{"cond":"on","block":3,"minutes":8.1,"missed":0,"overruns":0,"wakesPerMin":0.62,"selfChannelWakesPerMinOutsideStimuli":0,"selfChannelWakesByChannel":{},"attributedEvents":77,"thoughts":4,"thoughtsPerMin":0.49}
+
+## Live stimulus benchmark (CPU burn, 8 cores, 20s)
+efference | onset detected (≤10 s) | median onset s | release detected | median release s | external wake | report up | report down | self-channel wakes/min | wakes/min | missed ticks
+off | 100% [72-100] (10/10) | 0.38 | 50% [24-76] (5/10) | 0.58 | 0% [-0-28] (0/10) | 100% [72-100] (10/10) | 50% [24-76] (5/10) | 0.25 | 1.40 | 0
+on | 90% [60-98] (9/10) | 0.45 | 40% [17-69] (4/10) | 0.72 | 0% [-0-28] (0/10) | 90% [60-98] (9/10) | 40% [17-69] (4/10) | 0.19 | 1.00 | 0
+results -> results/live-2026-10-13T010152.jsonl

@@ -75,7 +75,7 @@ const score = (b: Awaited<ReturnType<typeof runBlock>>, cond: string) => {
     return {
       cond, block: x.block, onsetLatency: on ? on.t_wall - x.onset : null, releaseLatency: off ? off.t_wall - x.release : null,
       externalWake: extWake, externalBlocked: extBlocked, reportUp: upOk, reportDown: downOk, report: changes,
-      truth: { onsetAgo: +(x.askT - x.onset).toFixed(1), releaseAgo: +(x.askT - x.release).toFixed(1) },
+      truth: { onsetWall: x.onset, releaseWall: x.release, askWall: x.askT, onsetAgo: +(x.askT - x.onset).toFixed(1), releaseAgo: +(x.askT - x.release).toFixed(1) },
     }
   })
   const scored = events.filter((e) => e.t_wall >= scoredFrom)
@@ -98,7 +98,12 @@ for (const [i, cond] of ORDER.entries()) {
   const b = await runBlock(i, cond)
   const s = score(b, cond)
   s.rows.forEach((row) => out.write({ type: 'trial', ...row }))
-  out.write({ type: 'block', ...s.summary })
+  out.write({ type: 'block', ...s.summary, startWall: b.t0, scoredFromWall: b.t0 + WARMUP_S, endWall: b.t1 })
+  const db = new Database(join(b.dir, 'mind.db'), { readonly: true })
+  for (const e of db.query('SELECT * FROM events ORDER BY t_wall').all()) out.write({ type: 'event', cond, block: i, ...(e as object) })
+  for (const t of db.query('SELECT id, t_start, t_end, trigger, status, tokens, confidence FROM thoughts ORDER BY t_start').all()) out.write({ type: 'thought', cond, block: i, ...(t as object) })
+  db.close()
+  rmSync(b.dir, { recursive: true })
   console.log(JSON.stringify(s.summary))
   all.push(s)
 }

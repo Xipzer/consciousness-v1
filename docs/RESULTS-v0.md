@@ -171,3 +171,22 @@ What the failure shows:
 Proposed next fix (not yet implemented): a discrete-state detector for integer and boolean channels (`brain.up`,
 `brain.busy_slots`, `mind.active`), where every value change is an event; and attributed events are at least `log`,
 never `ignore`.
+
+### 8.15 Discrete-state detector and notice floor (held-out, pre-registered)
+Live recording 2026-10-13 04:50:45-06:50:45 UTC, normal operation with no benchmarks or load; 97 scored generations
+(≥ 3 s, idle model beforehand). Each prediction was scored once.
+
+| Prediction | Result | Verdict |
+|---|---|---|
+| P16a onset ≥ 90% | 97/97, median 1.00 s | **pass** |
+| P16b release ≥ 90% | 97/97, median 0.64 s | **pass** |
+| P16c without discrete detector: onset ≤ 50%, release ≤ 10% | 20/97, 0/97 | **pass** |
+| P16c without notice floor: both ≤ 10% | 0/97, 0/97 | **pass** |
+| P16d efference-on wakes ≤ 5% of efference-off | 1 vs 197 (0.5%); 2544/2545 reafferent events attributed to self | **pass** |
+
+Each component earns its place: the discrete detector is needed to time on/off states, the notice floor keeps
+self-caused changes in the workspace, and efference stops them waking thoughts.
+
+Also measured in the same window: the live system woke about 1.1 times a minute, almost all on routine disk and network
+bursts (disk read 31, net tx 28, disk write 18, net rx 15 in 2 h). That is the next attention target. The tick stayed
+on time (0 missed, p99 about 1 ms), and storage ran at about 55 MB/day compressed ticks plus 13 MB/day DB.

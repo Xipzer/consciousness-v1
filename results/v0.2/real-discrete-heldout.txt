@@ -1,0 +1,26 @@
+recorded 2.0 h, 68571 frames; 111 thoughts inside coverage
+
+full
+P15a onset of real generations (busy_slots up within 3 s): 100% [96-100] (97/97), median 1.00 s
+P15b release (down within 3 s of end): 100% [96-100] (97/97), median 0.64 s
+P15c reafferent change events inside thought windows: 2545, attributed to self 100% [100-100] (2544/2545), wakes from them 1
+all wakes per hour: 158
+
+no-discrete
+P15a onset of real generations (busy_slots up within 3 s): 21% [14-30] (20/97), median 2.20 s
+P15b release (down within 3 s of end): 0% [0-4] (0/97), median undefined s
+P15c reafferent change events inside thought windows: 2156, attributed to self 100% [100-100] (2155/2156), wakes from them 1
+all wakes per hour: 158
+
+no-notice-floor
+P15a onset of real generations (busy_slots up within 3 s): 0% [0-4] (0/97), median undefined s
+P15b release (down within 3 s of end): 0% [0-4] (0/97), median undefined s
+P15c reafferent change events inside thought windows: 2545, attributed to self 100% [100-100] (2544/2545), wakes from them 1
+all wakes per hour: 158
+
+efference-off
+P15a onset of real generations (busy_slots up within 3 s): 100% [96-100] (97/97), median 1.00 s
+P15b release (down within 3 s of end): 100% [96-100] (97/97), median 0.64 s
+P15c reafferent change events inside thought windows: 2545, attributed to self 0% [-0-0] (0/2545), wakes from them 197
+all wakes per hour: 216.5
+results -> results/real-2026-10-13T065210.jsonl

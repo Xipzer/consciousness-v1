@@ -1,0 +1,4 @@
+{"variant":"full","thoughtsScored":97,"onsetDetected":97,"onsetMedianS":0.999000072479248,"releaseDetected":97,"releaseMedianS":0.6440000534057617,"reafferentEventsInThought":2545,"attributedSelf":2544,"wakesFromThem":1,"totalWakesPerHour":158}
+{"variant":"no-discrete","thoughtsScored":97,"onsetDetected":20,"onsetMedianS":2.1989998817443848,"releaseDetected":0,"releaseMedianS":null,"reafferentEventsInThought":2156,"attributedSelf":2155,"wakesFromThem":1,"totalWakesPerHour":158}
+{"variant":"no-notice-floor","thoughtsScored":97,"onsetDetected":0,"onsetMedianS":null,"releaseDetected":0,"releaseMedianS":null,"reafferentEventsInThought":2545,"attributedSelf":2544,"wakesFromThem":1,"totalWakesPerHour":158}
+{"variant":"efference-off","thoughtsScored":97,"onsetDetected":97,"onsetMedianS":0.999000072479248,"releaseDetected":97,"releaseMedianS":0.6440000534057617,"reafferentEventsInThought":2545,"attributedSelf":0,"wakesFromThem":197,"totalWakesPerHour":216.5}

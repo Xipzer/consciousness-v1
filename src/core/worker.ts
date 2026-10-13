@@ -15,6 +15,7 @@ export type ToWorker =
   | { type: 'reading'; channel: string; value: number }
   | { type: 'stop' }
   | { type: 'snapshot'; id: number }
+  | { type: 'pulse'; channel: string }
 
 const wallNow = () => Date.now() / 1000
 const monoNow = () => performance.now() / 1000
@@ -87,6 +88,7 @@ const run = (cfg: Config, identity: { instanceId: string; birthWall: number }) =
   }
   setTimeout(loop, 0)
 
+  pulse = (channel: string) => core.pulse(channel, monoNow())
   snapshot = (id: number) => {
     const w = wallNow()
     self.postMessage({ type: 'snapshot', id, self: core.selfModel(w), recent: core.recent.slice(), tWall: w })
@@ -103,6 +105,7 @@ const run = (cfg: Config, identity: { instanceId: string; birthWall: number }) =
 
 let stop: (() => void) | null = null
 let snapshot: ((id: number) => void) | null = null
+let pulse: ((channel: string) => void) | null = null
 
 self.onmessage = (ev: MessageEvent<ToWorker>) => {
   const m = ev.data
@@ -112,6 +115,10 @@ self.onmessage = (ev: MessageEvent<ToWorker>) => {
   }
   if (m.type === 'reading') {
     latest.set(m.channel, { value: m.value, t: monoNow() })
+    return
+  }
+  if (m.type === 'pulse') {
+    pulse?.(m.channel)
     return
   }
   if (m.type === 'snapshot') {

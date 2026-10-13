@@ -484,6 +484,15 @@ block, housekeeping efference on/off, the same synthetic trials as 8.10.
 **P12** housekeeping efference on reduces wakes on those four channels within 20 s of a chore by ≥ 50%, with no
 loss of `test.live` onset or release detection.
 
+**Run 1 (seed 12): refuted, and invalid as a test of the mechanism.** Wakes after chores were 2 (off) against 5 (on),
+and no event in the on blocks was attributed to housekeeping. Cause: the chore raised and lowered `self.housekeeping`
+in two messages sent back to back after the synchronous work, so the worker overwrote 1 with 0 before any tick read
+it. The efference copy never reached the core. Fix: a chore now sends a single `pulse` message on completion, which
+opens the attribution window directly (`test/core.test.ts` covers it). Run 2 (seed 13) repeats the protocol unchanged
+on the fixed code, with the 8.13 arbiter changes on in every block. Both runs execute from a frozen snapshot of the
+committed code, so edits made during a run cannot reach later blocks. (Run 1 was restarted twice in its first block
+for exactly that reason; no trials were lost.)
+
 ### 8.12 Component ablations in replay (primary method)
 `bench/ablate.ts` replays the recorded body with a scripted `test.a` channel (seeded, ground truth exact): held steps
 of 1, 1.5, 2, 3, 5 and 8 sd with release after 15 s, 1 s pulses, 60 s ramps and null windows. It scores event-level

@@ -159,6 +159,25 @@ test('housekeeping efference attributes main-loop lag only while chores run', ()
   expect(run(true, 60, 150).some((e) => e.attribution === undefined)).toBe(true)
 })
 
+test('a housekeeping pulse (synchronous chore) opens the attribution window', () => {
+  const chans: ChannelDef[] = [{ name: 'self.main_lag_ms', unit: 'ms', periodS: 0.5, minSigma: 0.2 }]
+  const run = (pulse: boolean) => {
+    const core = new Core(chans, loadConfig(), { instanceId: 'x', birthWall: 0 })
+    const r = rng(4)
+    const latest: Latest = new Map()
+    const events: CoreEvent[] = []
+    for (let k = 0; k < 1800; k++) {
+      const t = k / 10
+      if (pulse && k === 1200) core.pulse('self.housekeeping', t)
+      if (k % 5 === 0) latest.set('self.main_lag_ms', { value: (t >= 120.4 && t < 121.4 ? 40 : 0.4) + 0.05 * gauss(r), t })
+      events.push(...core.step(latest, t, 1e9 + t).events)
+    }
+    return events.filter((e) => e.channel === 'self.main_lag_ms' && e.tWall - 1e9 >= 120)
+  }
+  expect(run(true).every((e) => e.attribution === 'self' && e.decision !== 'wake')).toBe(true)
+  expect(run(false).some((e) => e.decision === 'wake')).toBe(true)
+})
+
 describe('memory', () => {
   test('chain detects tampering and continuity uses host uptime', () => {
     const dir = mkdtempSync(join(tmpdir(), 'cv1-'))

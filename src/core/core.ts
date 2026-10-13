@@ -116,6 +116,13 @@ export class Core {
     return { tick: this.tick, tMono, tWall, values, ages, change, maxSalience, events, wake: wake.length ? wake : null }
   }
 
+  pulse(channel: string, tMono: number) {
+    const src = this.sources.find((x) => x.channel === channel)
+    if (!src) return
+    src.active = false
+    src.endMono = tMono
+  }
+
   private attribute(events: CoreEvent[], latest: Latest, tMono: number) {
     const tail = (scale?: Scale) => this.cfg.efferenceTailS + 3 * this.cfg.timescalesS[scale ?? 'fast']
     for (const src of this.sources) {

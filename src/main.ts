@@ -126,13 +126,11 @@ setInterval(() => {
   expected = now + 500
 }, 500)
 
-let chores = 0
 const chore = <T>(fn: () => T): T => {
-  sense('self.housekeeping', ++chores)
   try {
     return fn()
   } finally {
-    sense('self.housekeeping', --chores)
+    worker.postMessage({ type: 'pulse', channel: 'self.housekeeping' })
   }
 }
 

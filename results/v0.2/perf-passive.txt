@@ -1,0 +1,9 @@
+## Passive architecture performance (normal operation, no induced load)
+stats windows: 131 (10 s each, 0.4 h)
+tick compute ms: median of window p50 0.056, median window p99 0.358, 99th pct of window p99 9.272, worst max 11.011
+overruns (tick compute > period): 0 per run max; missed ticks: 0 per run max
+thoughts: {"dropped":45,"done":97,"error":1,"interrupted":5}
+thought start latency ms (wake event to request): p50 1.0, p99 1.0, n=15
+thought duration ms: p50 4131, p90 6256
+interrupt latency ms (abort to slot released): no interrupts logged since interrupt_ms was added
+2026-10-13T00:38:24.871Z first-hour storage: 78.6 MB/day (uncompressed current segment + db)

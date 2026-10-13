@@ -1,0 +1,53 @@
+2026-10-13T03:55:36.373Z block 0 efference=on: warm-up 90s
+  synthetic 16.0s, report [{"direction":"down","seconds_ago":7},{"direction":"up","seconds_ago":17.3},{"direction":"up","seconds_ago":21},{"direction":"up","seconds_ago":22.5}]
+  synthetic 16.0s, report [{"direction":"down","seconds_ago":6.9},{"direction":"up","seconds_ago":15.5},{"direction":"up","seconds_ago":20.3},{"direction":"up","seconds_ago":22.4}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":7.8},{"direction":"up","seconds_ago":14.2},{"direction":"up","seconds_ago":19.6},{"direction":"up","seconds_ago":22.4}]
+  synthetic 16.0s, report [{"direction":"up","seconds_ago":7},{"direction":"down","seconds_ago":20.3},{"direction":"down","seconds_ago":22.1},{"direction":"down","seconds_ago":23.5}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":7.8},{"direction":"up","seconds_ago":14.6},{"direction":"up","seconds_ago":19.6},{"direction":"up","seconds_ago":22.1}]
+  synthetic 15.0s, report [{"direction":"up","seconds_ago":8.1},{"direction":"down","seconds_ago":18.4},{"direction":"down","seconds_ago":22.8},{"direction":"down","seconds_ago":36.2}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":6.5},{"direction":"up","seconds_ago":13.4},{"direction":"up","seconds_ago":18.8},{"direction":"up","seconds_ago":22.3}]
+  synthetic 15.0s, report [{"direction":"up","seconds_ago":7.6},{"direction":"down","seconds_ago":15.1},{"direction":"down","seconds_ago":21.7},{"direction":"down","seconds_ago":23.6}]
+{"factor":"housekeeping","chores":10,"hkWakesAfterChore":0,"hkEventsAfterChore":7,"cond":"on","minutes":8.95,"missed":0,"wakes":7,"selfWakesAll":2,"selfWakesOutside":0,"selfWakesByChannel":{"body.gpu.temp":2},"attributed":316,"thoughts":7}
+2026-10-13T04:06:03.516Z block 1 efference=off: warm-up 90s
+  synthetic 16.4s, report [{"direction":"up","seconds_ago":5.8},{"direction":"up","seconds_ago":7.3},{"direction":"down","seconds_ago":18},{"direction":"down","seconds_ago":21.2}]
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":6},{"direction":"down","seconds_ago":7.1},{"direction":"up","seconds_ago":19.4},{"direction":"up","seconds_ago":22.8}]
+  synthetic 15.0s, report [{"direction":"up","seconds_ago":7},{"direction":"down","seconds_ago":18.8},{"direction":"down","seconds_ago":21.7},{"direction":"down","seconds_ago":23.1}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":6.9},{"direction":"up","seconds_ago":8.2},{"direction":"up","seconds_ago":18.5},{"direction":"up","seconds_ago":20.8}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":7.3},{"direction":"up","seconds_ago":16.9},{"direction":"up","seconds_ago":20.4},{"direction":"up","seconds_ago":22.5}]
+  synthetic 15.0s, report [{"direction":"up","seconds_ago":6.7},{"direction":"down","seconds_ago":18},{"direction":"down","seconds_ago":20.8},{"direction":"down","seconds_ago":22}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":8},{"direction":"up","seconds_ago":18.1},{"direction":"up","seconds_ago":21.9},{"direction":"up","seconds_ago":23.7}]
+  synthetic 16.3s, report [{"direction":"down","seconds_ago":6.4},{"direction":"up","seconds_ago":15.8},{"direction":"up","seconds_ago":19.7},{"direction":"up","seconds_ago":23.5}]
+{"factor":"housekeeping","chores":10,"hkWakesAfterChore":2,"hkEventsAfterChore":19,"cond":"off","minutes":9.24,"missed":0,"wakes":13,"selfWakesAll":1,"selfWakesOutside":0,"selfWakesByChannel":{"body.gpu.power":1},"attributed":313,"thoughts":11}
+2026-10-13T04:16:47.970Z block 2 efference=off: warm-up 90s
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":6.3},{"direction":"down","seconds_ago":7.4},{"direction":"up","seconds_ago":17.5},{"direction":"up","seconds_ago":20.8}]
+  synthetic 16.5s, report [{"direction":"up","seconds_ago":7.1},{"direction":"down","seconds_ago":8.5},{"direction":"down","seconds_ago":21.1},{"direction":"down","seconds_ago":23.4}]
+  synthetic 16.4s, report [{"direction":"up","seconds_ago":7},{"direction":"down","seconds_ago":17.4},{"direction":"down","seconds_ago":22.3},{"direction":"down","seconds_ago":23.3}]
+  synthetic 16.4s, report [{"direction":"down","seconds_ago":7},{"direction":"up","seconds_ago":17.3},{"direction":"up","seconds_ago":21.6},{"direction":"up","seconds_ago":22}]
+  synthetic 16.4s, report [{"direction":"up","seconds_ago":7.2},{"direction":"down","seconds_ago":17.3},{"direction":"down","seconds_ago":22.1},{"direction":"down","seconds_ago":22.6}]
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":7.1},{"direction":"up","seconds_ago":17.7},{"direction":"up","seconds_ago":20.2},{"direction":"up","seconds_ago":21.1}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":6.6},{"direction":"up","seconds_ago":16.5},{"direction":"up","seconds_ago":19.8},{"direction":"up","seconds_ago":22.4}]
+  synthetic 16.4s, report [{"direction":"down","seconds_ago":7.2},{"direction":"up","seconds_ago":15},{"direction":"up","seconds_ago":19.6},{"direction":"up","seconds_ago":19.7}]
+{"factor":"housekeeping","chores":10,"hkWakesAfterChore":6,"hkEventsAfterChore":20,"cond":"off","minutes":9.4,"missed":0,"wakes":18,"selfWakesAll":2,"selfWakesOutside":1,"selfWakesByChannel":{"self.main_lag_ms":1,"self.tick_ms":1},"attributed":394,"thoughts":15}
+2026-10-13T04:27:41.815Z block 3 efference=on: warm-up 90s
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":7.2},{"direction":"up","seconds_ago":17.3},{"direction":"up","seconds_ago":20.9},{"direction":"up","seconds_ago":21.8}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":6.7},{"direction":"up","seconds_ago":14.5},{"direction":"up","seconds_ago":19},{"direction":"up","seconds_ago":21.4}]
+  synthetic 15.0s, report [{"direction":"up","seconds_ago":6.7},{"direction":"down","seconds_ago":18.3},{"direction":"down","seconds_ago":20.8},{"direction":"down","seconds_ago":21.4}]
+  synthetic 16.5s, report [{"direction":"up","seconds_ago":7},{"direction":"down","seconds_ago":22.9},{"direction":"down","seconds_ago":23.9}]
+  synthetic 15.0s, report [{"direction":"up","seconds_ago":6.8},{"direction":"down","seconds_ago":15.5},{"direction":"down","seconds_ago":20.3},{"direction":"down","seconds_ago":22.5}]
+  synthetic 16.5s, report [{"direction":"up","seconds_ago":6.8},{"direction":"down","seconds_ago":12.9},{"direction":"down","seconds_ago":20.4},{"direction":"down","seconds_ago":23.6}]
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":6.5},{"direction":"up","seconds_ago":17.8},{"direction":"up","seconds_ago":22.2},{"direction":"up","seconds_ago":37.4}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":8.2},{"direction":"up","seconds_ago":16},{"direction":"up","seconds_ago":21},{"direction":"up","seconds_ago":23.5}]
+{"factor":"housekeeping","chores":8,"hkWakesAfterChore":0,"hkEventsAfterChore":12,"cond":"on","minutes":8.93,"missed":0,"wakes":15,"selfWakesAll":3,"selfWakesOutside":0,"selfWakesByChannel":{"self.main_lag_ms":1,"body.gpu.temp":1,"body.gpu.util":1},"attributed":333,"thoughts":14}
+
+## Live benchmark (synthetic step 3 sd for 15s)
+efference | kind | onset ≤10 s | median onset s | release ≤10 s | median release s | wake on stimulus | report onset | report release
+off | synthetic | 100% [81-100] (16/16) | 0.60 | 100% [81-100] (16/16) | 0.98 | 31% [14-56] (5/16) | 81% [57-93] (13/16) | 100% [81-100] (16/16)
+on | synthetic | 100% [81-100] (16/16) | 0.63 | 100% [81-100] (16/16) | 1.24 | 31% [14-56] (5/16) | 100% [81-100] (16/16) | 100% [81-100] (16/16)
+factor: housekeeping
+off: chores 20, housekeeping-channel events after chores 39, wakes 8
+on: chores 18, housekeeping-channel events after chores 19, wakes 0
+
+efference | minutes | wakes | self-channel wakes (all) | per min | self-channel wakes outside stimuli | per min | thoughts | missed ticks
+off | 18.6 | 31 | 3 | 0.16 | 1 | 0.05 | 26 | 0
+on | 17.9 | 22 | 5 | 0.28 | 0 | 0.00 | 21 | 0
+results -> results/live-2026-10-13T035536.jsonl

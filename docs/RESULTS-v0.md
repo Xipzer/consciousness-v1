@@ -104,3 +104,46 @@ Raw data: `results/v0.1/` (trial rows, per-block event exports). 10 trials per c
   regression. It extrapolated total directory growth, so it rose with the uncompressed current-hour segment and fell
   at each hourly compression (it read −34.6 MB/day just after one). Retention compressed each closed hour on schedule.
   The log now reports raw ticks, compressed ticks (from the last closed hour's ratio), DB growth and WAL separately.
+
+## v0.2 (synthetic and replayed stimuli only; no induced hardware load)
+
+Protocols: SPEC 8.9-8.13. Live runs use the synthetic `test.live` channel (unit noise, ±3 sd step held 15 s) in ABBA
+blocks, executed from frozen snapshots of the committed code. Replay ablations use held-out seeds 5-6. Raw data and
+printed summaries are in `results/v0.2/`.
+
+| # | Prediction | Result | Verdict |
+|---|---|---|---|
+| P9b | Thought efference cuts self-channel wakes ≥ 50% | 29 → 1 over about 18 min per condition (1.60 → 0.06/min); outside stimulus windows 5 → 0; thoughts 35 → 14 | **pass** |
+| P10b | `test.live` onset and release ≥ 90%, 0 missed ticks | onset 15/16 both (median 0.48 / 0.38 s); release 15/16 both (0.98 / 1.09 s); 0 missed | **pass** |
+| P11 | Stimulus onset wakes a thought ≥ 80% | 0/16 in both conditions | **refuted**, which led to 8.13 |
+| P12 | Housekeeping efference cuts chore-caused wakes ≥ 50% | run 1 invalid (bug: the efference copy never reached the core). Run 2: 8 → 0 wakes within 20 s of a chore; onset and release 16/16 in both | **pass (run 2)** |
+| P13 | Direction-specific habituation raises release detection ≥ 20 pts, false alarms ≤ +2 pts | release 33/48 vs 2/48 (+65 pts, McNemar p = 9e-10); null false alarms 0/8 vs 0/8 | **pass** |
+| P14a | Arbiter fix: steps of 5-8 sd wake ≥ 70%; old arbiter ≤ 10% | 14/16 vs 0/16 | **pass** |
+| P14b | Escalation is necessary | without escalation 0/16 | **pass** |
+| P14c | Steps ≤ 2 sd and null windows wake ≤ 5% | 0/24 and 0/8 | **pass** |
+| P14d | Background body wakes ≤ 1.3 × old arbiter | 1.17 vs 0.99 per min (1.18 ×) | **pass** |
+
+Also measured:
+- **Live wake on a 3 sd stimulus with the 8.13 arbiter** (housekeeping run 2, all blocks): 10/32, up from 0/32 before.
+  In replay, 3 sd steps woke 3/8, 1 s pulses 0/8 and 60 s ramps 0/8. Routine disk and network bursts still take much of
+  the wake budget. This is the next salience target.
+- **Small steps in replay** (held-out): onset detected for 1 sd in 5/8 and 1.5 sd in 7/8 trials, but release in only
+  1/8 each. From 2 sd up, onset is 8/8 and release 7-8/8.
+- **The urgent override (spec R5) had no measurable effect** on this set. It is kept because the spec requires it, and
+  it is ablatable (`CV1_URGENT=0`).
+- **No-delta ablation**: release detection 1/48 vs 33/48 for the full core.
+- **Live `/ask` reports** (8 s after release): onset correct 13-16/16 and release 16/16 per condition in run 2; 15/16
+  in the efference run.
+- **Passive performance** (`bench/perf.ts`, normal operation only): tick compute median p50 0.06 ms and median p99
+  0.36 ms, worst 11 ms, 0 missed ticks; thought start latency (wake event to request) p50 1 ms. No interrupts have
+  been logged since interrupt latency logging was added.
+
+Bugs found and fixed during v0.2 (each disclosed in the spec):
+- **Efference counter leak on interrupted thoughts**: `mind.active` could stick at 1 and keep the self-attribution
+  window open. v0.1 run 1 may have been affected.
+- **Housekeeping efference copy lost** for synchronous chores (8.11 run 1).
+- **Salience fixed at the threshold**: an event's salience was set when z first crossed the threshold, so it never
+  reflected the size of the change (8.13).
+- **Budget rule ignored urgency**, contrary to spec R5.
+- **Clock channel emitted change events.**
+- **Mid-hour channel-layout change** would have corrupted the current tick segment; segments are now keyed by layout.

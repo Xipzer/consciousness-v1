@@ -90,6 +90,51 @@ describe('core motion layer', () => {
   })
 })
 
+describe('corollary discharge', () => {
+  const chans: ChannelDef[] = [
+    { name: 'body.gpu.util', unit: '%', periodS: 0.1, minSigma: 1 },
+    { name: 'body.cpu.load', unit: 'frac', periodS: 0.1, minSigma: 0.01 },
+    { name: 'mind.active', unit: 'n', periodS: 3600, minSigma: 0.5 },
+    { name: 'brain.busy_slots', unit: 'n', periodS: 0.1, minSigma: 0.5 },
+  ]
+  const run = (efference: boolean, thinkFrom: number, thinkTo: number, busyExtra = 0) => {
+    const core = new Core(chans, loadConfig({ efference }), { instanceId: 'x', birthWall: 0 })
+    const r = rng(9)
+    const latest: Latest = new Map()
+    const events: CoreEvent[] = []
+    for (let k = 0; k < 1800; k++) {
+      const t = k / 10
+      const thinking = t >= thinkFrom && t < thinkTo
+      latest.set('body.gpu.util', { value: (thinking ? 60 : 2) + gauss(r), t })
+      latest.set('body.cpu.load', { value: (t >= 150 && t < 160 ? 0.5 : 0.05) + 0.01 * gauss(r), t })
+      latest.set('brain.busy_slots', { value: (thinking ? 1 : 0) + busyExtra * (thinking ? 1 : 0), t })
+      if (k === Math.round(thinkFrom * 10)) latest.set('mind.active', { value: 1, t })
+      if (k === Math.round(thinkTo * 10)) latest.set('mind.active', { value: 0, t })
+      events.push(...core.step(latest, t, 1e9 + t).events)
+    }
+    return events
+  }
+
+  test('self-caused GPU and slot changes are attributed and cannot wake; they stay in history', () => {
+    const on = run(true, 100, 110).filter((e) => e.channel === 'body.gpu.util' || e.channel === 'brain.busy_slots')
+    expect(on.length).toBeGreaterThan(0)
+    expect(on.every((e) => e.attribution === 'self' && e.decision !== 'wake')).toBe(true)
+    const off = run(false, 100, 110).filter((e) => e.channel === 'body.gpu.util')
+    expect(off.some((e) => e.decision === 'wake')).toBe(true)
+  })
+
+  test('external changes stay unattributed, even during a thought', () => {
+    const cpu = run(true, 145, 165).filter((e) => e.channel === 'body.cpu.load')
+    expect(cpu.length).toBeGreaterThan(0)
+    expect(cpu.every((e) => e.attribution === undefined)).toBe(true)
+  })
+
+  test('brain load beyond own threads is treated as external', () => {
+    const slots = run(true, 100, 110, 1).filter((e) => e.channel === 'brain.busy_slots')
+    expect(slots.some((e) => e.attribution === undefined)).toBe(true)
+  })
+})
+
 describe('memory', () => {
   test('chain detects tampering and continuity uses host uptime', () => {
     const dir = mkdtempSync(join(tmpdir(), 'cv1-'))

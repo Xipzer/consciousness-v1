@@ -39,6 +39,9 @@ export class Core {
   private lastGapS = 0
   private eventSeq = 0
   private startMono: number | null = null
+  private selfEndMono: number | null = null
+  private selfWasActive = false
+  private readonly reafferent: Set<string>
   readonly recent: CoreEvent[] = []
 
   constructor(
@@ -47,6 +50,7 @@ export class Core {
     private readonly identity: { instanceId: string; birthWall: number },
   ) {
     this.channels = channels
+    this.reafferent = new Set(cfg.reafferent)
     this.state = channels.map((def) => ({
       def,
       value: 0,
@@ -93,6 +97,7 @@ export class Core {
     }
 
     if (motion) this.trackStillness(change, tWall, events)
+    this.attribute(events, latest, tMono)
 
     let maxSalience = 0
     const wake: CoreEvent[] = []
@@ -106,6 +111,28 @@ export class Core {
     while (this.recent.length > 200) this.recent.shift()
 
     return { tick: this.tick, tMono, tWall, values, ages, change, maxSalience, events, wake: wake.length ? wake : null }
+  }
+
+  private attribute(events: CoreEvent[], latest: Latest, tMono: number) {
+    const own = latest.get('mind.active')?.value ?? 0
+    if (own > 0) this.selfWasActive = true
+    else if (this.selfWasActive) {
+      this.selfWasActive = false
+      this.selfEndMono = tMono
+    }
+    if (!this.cfg.efference) return
+    const sinceEnd = own > 0 ? 0 : this.selfEndMono === null ? Infinity : tMono - this.selfEndMono
+    const tail = (scale?: Scale) => this.cfg.efferenceTailS + 3 * this.cfg.timescalesS[scale ?? 'fast']
+    if (sinceEnd > tail('medium')) return
+    const expectedSlots = Math.max(own, 1)
+    const busy = latest.get('brain.busy_slots')?.value ?? 0
+    for (const e of events) {
+      if (e.kind !== 'change' || !e.channel || !this.reafferent.has(e.channel)) continue
+      if (sinceEnd > tail(e.timescale)) continue
+      if (e.channel.startsWith('brain.') && busy > expectedSlots) continue
+      e.attribution = 'self'
+      e.salience *= this.cfg.efferenceDiscount
+    }
   }
 
   private update(s: ChannelState, r: { value: number; t: number }, tWall: number, events: CoreEvent[]): number {
@@ -228,6 +255,7 @@ export class Core {
     const sig = `${e.kind}:${e.channel ?? '*'}`
     if (e.salience < c.logSalience) return Object.assign(e, { decision: 'ignore', rule: 'R2' })
     if (e.salience < c.wakeSalience) return Object.assign(e, { decision: 'log', rule: 'R3' })
+    if (e.attribution === 'self') return Object.assign(e, { decision: 'log', rule: 'R3s' })
     const last = this.lastWake.get(sig)
     if (last !== undefined && tMono - last < c.wakeCooldownS) return Object.assign(e, { decision: 'refractory', rule: 'R4' })
     this.wakeTimes = this.wakeTimes.filter((t) => tMono - t < 60)

@@ -20,6 +20,10 @@ export interface Config {
   retentionDownsampledDays: number
   llmUrl: string
   narrator: boolean
+  efference: boolean
+  efferenceTailS: number
+  efferenceDiscount: number
+  reafferent: string[]
 }
 
 const num = (key: string, fallback: number) => {
@@ -47,5 +51,12 @@ export const loadConfig = (overrides: Partial<Config> = {}): Config => ({
   retentionDownsampledDays: num('CV1_RETENTION_DOWNSAMPLED_DAYS', 90),
   llmUrl: process.env.CV1_LLM_URL ?? '',
   narrator: process.env.CV1_NARRATOR !== '0',
+  efference: process.env.CV1_EFFERENCE !== '0',
+  efferenceTailS: 15,
+  efferenceDiscount: 0.1,
+  reafferent: [
+    'body.gpu.util', 'body.gpu.power', 'body.gpu.temp', 'brain.busy_slots', 'brain.gen_tok',
+    'mind.active', 'mind.confidence', 'self.tick_ms', 'self.main_lag_ms',
+  ],
   ...overrides,
 })

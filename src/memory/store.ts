@@ -30,7 +30,7 @@ export class Store {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, tick INTEGER, t_wall REAL, kind TEXT, channel TEXT,
         timescale TEXT, direction INTEGER, z REAL, delta REAL, value REAL, duration_s REAL, salience REAL,
-        decision TEXT, rule TEXT);
+        decision TEXT, rule TEXT, attribution TEXT);
       CREATE INDEX IF NOT EXISTS events_t ON events (t_wall);
       CREATE TABLE IF NOT EXISTS chain (seq INTEGER PRIMARY KEY, t_wall REAL, tick INTEGER, kind TEXT, slow TEXT,
         raw TEXT, sigma TEXT, prev TEXT, digest TEXT);
@@ -39,18 +39,24 @@ export class Store {
         confidence REAL);
       CREATE TABLE IF NOT EXISTS runs (id INTEGER PRIMARY KEY AUTOINCREMENT, t_start REAL, t_end REAL, info TEXT);
     `)
+    this.migrate()
+  }
+
+  private migrate() {
+    const cols = (this.db.query('PRAGMA table_info(events)').all() as { name: string }[]).map((c) => c.name)
+    if (!cols.includes('attribution')) this.db.exec('ALTER TABLE events ADD COLUMN attribution TEXT')
   }
 
   insertEvents(events: CoreEvent[]) {
     const q = this.db.prepare(
-      'INSERT OR REPLACE INTO events VALUES ($id,$tick,$t,$kind,$ch,$ts,$dir,$z,$delta,$value,$dur,$sal,$dec,$rule)',
+      'INSERT OR REPLACE INTO events (id, tick, t_wall, kind, channel, timescale, direction, z, delta, value, duration_s, salience, decision, rule, attribution) VALUES ($id,$tick,$t,$kind,$ch,$ts,$dir,$z,$delta,$value,$dur,$sal,$dec,$rule,$attr)',
     )
     this.db.transaction(() => {
       for (const e of events) {
         q.run({
           $id: e.id, $tick: e.tick, $t: e.tWall, $kind: e.kind, $ch: e.channel ?? null, $ts: e.timescale ?? null,
           $dir: e.direction ?? null, $z: e.z ?? null, $delta: e.delta ?? null, $value: e.value ?? null,
-          $dur: e.durationS ?? null, $sal: e.salience, $dec: e.decision, $rule: e.rule,
+          $dur: e.durationS ?? null, $sal: e.salience, $dec: e.decision, $rule: e.rule, $attr: e.attribution ?? null,
         })
       }
     })()

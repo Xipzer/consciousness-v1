@@ -29,6 +29,7 @@ export interface CoreEvent {
   value?: number
   durationS?: number
   salience: number
+  attribution?: 'self'
   decision: 'ignore' | 'log' | 'refractory' | 'budget' | 'wake'
   rule: string
 }

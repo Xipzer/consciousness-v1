@@ -217,6 +217,26 @@ Priority of an event: `p = salience × w_kind + max_drive_relevance`. Decisions,
 
 ---
 
+### 3.10 Corollary discharge (self-caused change), v0.1
+Thinking changes the body: the narrator's generation raises GPU utilisation, power and temperature, token throughput
+and busy slots, and perturbs tick and main-loop timing. Without a self-prediction these reafferent changes look like
+novel stimuli and wake further thoughts, a feedback loop observed live. The fix is an efference copy, not a prompt:
+- **Efference copy**: every thought (narrator or `/ask` probe) increments `mind.active` when it starts and decrements it
+  when it ends. The core reads that channel every tick.
+- **Causal window**: from the start of a thought until `15 s + 3 τ` after the last thought ends, where τ is the
+  event's timescale (fast 1 s, so 18 s; medium 10 s, so 45 s), because slower EWMAs settle later.
+- **Reafferent channels**: `body.gpu.util`, `body.gpu.power`, `body.gpu.temp`, `brain.busy_slots`, `brain.gen_tok`,
+  `mind.active`, `mind.confidence`, `self.tick_ms`, `self.main_lag_ms`. CPU, memory, disk and network are never
+  attributed, so external load stays observable.
+- **Exafference check**: brain events are not attributed when `brain.busy_slots` exceeds the number of own thoughts
+  (someone else is using the model).
+- **Effect**: a `change` event on a reafferent channel inside the window gets `attribution = self`, its salience is
+  multiplied by 0.1, and it is logged but never wakes a thought (rule R3s). It stays in the tick log, the event store
+  and the workspace.
+- **Known limits**: an external GPU or timing change that coincides with a thought is masked for wake purposes
+  (still logged). The window is time-based and does not predict magnitude.
+- Disabled with `CV1_EFFERENCE=0`. Scored v0 benches (T1-T3) run with it off, so historical results are unchanged.
+
 ## 4. Cortices (after v0, one at a time, each with its own test and ablation)
 
 | Cortex | Contract | Test |
@@ -387,6 +407,24 @@ wall clock (measured: 30.0 s of uptime and monotonic time against 31.4 s of wall
 learns the uptime-to-wall rate from its own history and allows 5 s + 2% of the downtime. The scored T3 run uses trial
 seed 43. After scoring, the live chain interval was raised from 10 s to 60 s to cut storage (SQLite went from about 19
 to about 2 MB/day); T3 was scored with 10 s links.
+
+### 8.8 Live stimulus benchmark (v0.1, fixed before its scored run)
+`bench/live.ts` runs fresh daemon instances on the live workstation in ABBA blocks (efference on, off, off, on).
+Each block has a 90 s warm-up, then 5 trials: 40-70 s quiet, 8 CPU cores busy for 20 s (timestamped onset and
+release), then 8 s later the `/ask` endpoint is queried about `body.cpu.load` over the last 60 s. No memory pressure
+or network disruption.
+
+| Metric | Definition |
+|---|---|
+| Onset / release detection | a non-ignored `body.cpu.load` up (down) event within 10 s of onset (release), and its latency |
+| External wake | a wake on any `body.cpu.*` event between onset and release + 10 s |
+| Self-channel wakes/min | wakes on reafferent channels outside stimulus windows (onset − 2 s to release + 15 s) |
+| Report accuracy | the `/ask` answer has an up change within 3 s of the true onset age, and a down change within 3 s of the release age |
+| Missed ticks | from the instance's stats log |
+
+Predictions: **P9** with efference on, self-channel wakes/min outside stimuli fall by at least 50% against off.
+**P10** onset and release detection stay ≥ 90% in both conditions, with 0 missed ticks. External wake rate and report
+accuracy are reported without a prediction.
 
 Passing shows functional properties on the listed functions. Under the functionalist stance in 1.2 that is the claim;
 the spec does not claim more than the battery measures.

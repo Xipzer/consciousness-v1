@@ -531,6 +531,18 @@ while the spec says R5 applies only below an urgency threshold.
 - Urgent override: no effect predicted on this set (dev showed none); reported.
 Known limit (dev): 3 sd steps woke 1/8, because routine disk and network bursts take the wake budget.
 
+### 8.14 Secondary validation on real, naturally occurring events (pre-registered before scoring)
+`bench/real.ts` replays the main daemon's recorded tick log (about 5 h, 2026-10-12 22:44 to 2026-10-13 04:4x UTC) in
+wall-clock order through the current core, with efference on and off. Ground truth comes from records the sensing
+path never sees: the narrator's own `thoughts` rows (start and end of every real model generation, 104 thoughts that
+reached the model). Only thoughts lasting ≥ 3 s are scored for onset and release, because `brain.busy_slots` is
+polled at 1 Hz. No load is induced; these events happened in normal operation.
+- **P15a** a `brain.busy_slots` up event within 3 s of the thought start in ≥ 80% of scored thoughts.
+- **P15b** a down event within 3 s of the thought end in ≥ 80%.
+- **P15c** efference on: ≥ 90% of `change` events on reafferent channels inside thought windows (start to end + 18 s)
+  are attributed to self, and none of them wakes a thought. Efference off: the number of wakes they would cause is
+  reported.
+
 Passing shows functional properties on the listed functions. Under the functionalist stance in 1.2 that is the claim;
 the spec does not claim more than the battery measures.
 

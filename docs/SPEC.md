@@ -408,7 +408,7 @@ learns the uptime-to-wall rate from its own history and allows 5 s + 2% of the d
 seed 43. After scoring, the live chain interval was raised from 10 s to 60 s to cut storage (SQLite went from about 19
 to about 2 MB/day); T3 was scored with 10 s links.
 
-### 8.8 Live stimulus benchmark (v0.1, fixed before its scored run)
+### 8.8 Live stimulus benchmark (v0.1, fixed before its scored run; CPU stimulus since withdrawn, see 8.9)
 `bench/live.ts` runs fresh daemon instances on the live workstation in ABBA blocks (efference on, off, off, on).
 Each block has a 90 s warm-up, then 5 trials: 40-70 s quiet, 8 CPU cores busy for 20 s (timestamped onset and
 release), then 8 s later the `/ask` endpoint is queried about `body.cpu.load` over the last 60 s. No memory pressure
@@ -425,6 +425,18 @@ or network disruption.
 Predictions: **P9** with efference on, self-channel wakes/min outside stimuli fall by at least 50% against off.
 **P10** onset and release detection stay ≥ 90% in both conditions, with 0 missed ticks. External wake rate and report
 accuracy are reported without a prediction.
+
+### 8.9 Stimulus safety limits (binding)
+CPU burns caused a 96 C CPU peak and up to 524 W package power on the workstation (8-thread live-bench burns; the
+earlier T9 run also loaded all 32 threads for 4 minutes). The live CPU-burn stimulus and T9's CPU phases are
+withdrawn and removed from the code. Before any physical stimulus runs again:
+- **Prefer non-thermal stimuli**: a synthetic sensor channel injected into the live loop, or small I/O pulses.
+- **CPU stimuli**: at most 2 threads, pulses of a few seconds with a duty cycle of 25% or less, and the smallest size
+  that gives a reliable signal. They run only behind a thermal guard that reads CPU package temperature and aborts
+  above 80 C. WSL exposes no CPU temperature, so no CPU stimulus runs until such a sensor exists.
+- **Every stimulus run** kills its whole process group on exit or abort, aborts if GPU temperature exceeds 80 C,
+  and is reviewed by the owner before it is run.
+- No memory pressure or network disruption.
 
 Passing shows functional properties on the listed functions. Under the functionalist stance in 1.2 that is the claim;
 the spec does not claim more than the battery measures.

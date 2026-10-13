@@ -4,6 +4,8 @@ import { join } from 'node:path'
 import { loadConfig } from '../src/config.ts'
 import { arg, pct, results, rng } from './lib.ts'
 
+throw new Error('CPU burn stimulus withdrawn after thermal stress (SPEC 8.9). Redesigned stimulus pending owner review.')
+
 const ORDER = (process.argv.find((a) => a.startsWith('--order='))?.slice(8) ?? 'on,off,off,on').split(',')
 const TRIALS = arg('trials', 5)
 const CORES = arg('cores', 8)

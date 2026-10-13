@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs'
-import { cpus } from 'node:os'
 import { chat } from '../src/mind/llm.ts'
 import { arg, results } from './lib.ts'
 
@@ -15,9 +14,6 @@ const llmLoad = (stopAt: number) =>
     }
   }))
 
-const cpuLoad = (seconds: number) =>
-  Bun.spawn(['sh', '-c', `for i in $(seq ${cpus().length}); do timeout ${seconds} sh -c 'while :; do :; done' & done; wait`])
-
 const phases: { name: string; t0: number; t1: number }[] = []
 const phase = async (name: string, run: (stopAt: number) => Promise<unknown>) => {
   const t0 = Date.now() / 1000
@@ -28,14 +24,6 @@ const phase = async (name: string, run: (stopAt: number) => Promise<unknown>) =>
 
 await phase('idle', () => sleep(phaseS))
 await phase('llm-2-slots', (stopAt) => llmLoad(stopAt))
-await phase('cpu-all-cores', async () => {
-  await cpuLoad(phaseS).exited
-})
-await phase('llm+cpu', async (stopAt) => {
-  const p = cpuLoad(phaseS)
-  await llmLoad(stopAt)
-  await p.exited
-})
 await sleep(12)
 
 const lines = readFileSync('data/daemon.log', 'utf8').split('\n')

@@ -72,3 +72,35 @@ Paired on stimuli: S vs L +39 pts [27, 51], McNemar p = 1e-8.
 - T1-T3 run in accelerated time on recorded body data. Real-time runs cover T9 and live restarts only.
 - B1 is a minimal heartbeat. It got raw snapshots without noise statistics; a smarter wrapper would do better.
 - The detector was tuned on seeds 1-2 after run 1 exposed faults (SPEC 8.7). Held-out seeds were run once.
+
+## v0.1 live stimulus benchmark, run 1 (seed 7, ABBA, efference on/off)
+
+> The stimulus was an 8-thread CPU burn, since withdrawn for thermal stress (SPEC 8.9). Run 2 (seed 8) was aborted by
+> the owner and is not counted (`results/v0.1/ABORTED-live-seed8-thermal.jsonl`).
+
+Raw data: `results/v0.1/` (trial rows, per-block event exports). 10 trials per condition, about 16 scored minutes each.
+
+| Metric | Efference off | Efference on |
+|---|---|---|
+| CPU onset detected within 10 s | 10/10, median 0.38 s | 9/10, median 0.45 s |
+| CPU release detected within 10 s | 5/10 | 4/10 |
+| External wake on CPU events | 0/10 | 0/10 |
+| `/ask` report: onset within 3 s / release within 3 s | 10/10 / 5/10 | 9/10 / 4/10 |
+| Self-channel wakes/min outside stimulus windows (P9 metric) | 0.25 (4 wakes) | 0.19 (3 wakes) |
+| Reafferent wakes, whole scored period (exploratory) | 15 (GPU/brain 13) | 4 (GPU/brain 0) |
+| Thoughts, whole scored period | 21 | 14 |
+| Missed ticks | 0 | 0 |
+
+- **P9 (≥ 50% fewer self-channel wakes outside stimuli): refuted as stated** (−24%, 4 vs 3 wakes, too few to
+  separate). The 3 remaining wakes with efference on were `self.main_lag_ms` outside any thought window, so they were
+  not thought-caused. Over the whole period, efference removed every GPU/brain self-wake (13 to 0); most of the loop
+  happened inside stimulus windows, which the pre-registered metric excluded.
+- **P10 (onset and release ≥ 90%): refuted for release in both conditions.** Release events were detected (z 4.6-4.9)
+  but channel-level habituation from the onset 20 s earlier cut their salience below 2, so they were ignored. This is a
+  habituation fault, independent of efference.
+- **No external wake in either condition**: an 8-thread burn on 32 threads reached only z ≈ 4-5, salience below the
+  wake threshold of 8.
+- **Storage**: the climbing "bytes/day" projection (toward 96-105 MB/day) was a measurement artefact, not a retention
+  regression. It extrapolated total directory growth, so it rose with the uncompressed current-hour segment and fell
+  at each hourly compression (it read −34.6 MB/day just after one). Retention compressed each closed hour on schedule.
+  The log now reports raw ticks, compressed ticks (from the last closed hour's ratio), DB growth and WAL separately.

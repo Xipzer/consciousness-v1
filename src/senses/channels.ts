@@ -34,6 +34,7 @@ export const BRAIN: ChannelDef[] = [
 export const MIND: ChannelDef[] = [
   ch('mind.active', 'n', 3600, 0.5),
   ch('mind.confidence', 'p', 3600, 0.01),
+  ch('self.housekeeping', 'n', 3600, 0.5),
 ]
 
 export const TEST: ChannelDef[] = [ch('test.a', 'u', 0.1, 0.01), ch('test.live', 'u', 0.1, 0.01)]

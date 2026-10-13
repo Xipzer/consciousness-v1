@@ -39,9 +39,7 @@ export class Core {
   private lastGapS = 0
   private eventSeq = 0
   private startMono: number | null = null
-  private selfEndMono: number | null = null
-  private selfWasActive = false
-  private readonly reafferent: Set<string>
+  private readonly sources: { channel: string; enabled: boolean; reafferent: Set<string>; active: boolean; endMono: number | null }[]
   readonly recent: CoreEvent[] = []
 
   constructor(
@@ -50,7 +48,10 @@ export class Core {
     private readonly identity: { instanceId: string; birthWall: number },
   ) {
     this.channels = channels
-    this.reafferent = new Set(cfg.reafferent)
+    this.sources = [
+      { channel: 'mind.active', enabled: cfg.efference, reafferent: new Set(cfg.reafferent), active: false, endMono: null },
+      { channel: 'self.housekeeping', enabled: cfg.efferenceHousekeeping, reafferent: new Set(cfg.housekeepingReafferent), active: false, endMono: null },
+    ]
     this.state = channels.map((def) => ({
       def,
       value: 0,
@@ -114,24 +115,25 @@ export class Core {
   }
 
   private attribute(events: CoreEvent[], latest: Latest, tMono: number) {
-    const own = latest.get('mind.active')?.value ?? 0
-    if (own > 0) this.selfWasActive = true
-    else if (this.selfWasActive) {
-      this.selfWasActive = false
-      this.selfEndMono = tMono
-    }
-    if (!this.cfg.efference) return
-    const sinceEnd = own > 0 ? 0 : this.selfEndMono === null ? Infinity : tMono - this.selfEndMono
     const tail = (scale?: Scale) => this.cfg.efferenceTailS + 3 * this.cfg.timescalesS[scale ?? 'fast']
-    if (sinceEnd > tail('medium')) return
-    const expectedSlots = Math.max(own, 1)
-    const busy = latest.get('brain.busy_slots')?.value ?? 0
-    for (const e of events) {
-      if (e.kind !== 'change' || !e.channel || !this.reafferent.has(e.channel)) continue
-      if (sinceEnd > tail(e.timescale)) continue
-      if (e.channel.startsWith('brain.') && busy > expectedSlots) continue
-      e.attribution = 'self'
-      e.salience *= this.cfg.efferenceDiscount
+    for (const src of this.sources) {
+      const own = latest.get(src.channel)?.value ?? 0
+      if (own > 0) src.active = true
+      else if (src.active) {
+        src.active = false
+        src.endMono = tMono
+      }
+      if (!src.enabled) continue
+      const sinceEnd = own > 0 ? 0 : src.endMono === null ? Infinity : tMono - src.endMono
+      if (sinceEnd > tail('medium')) continue
+      const busy = latest.get('brain.busy_slots')?.value ?? 0
+      for (const e of events) {
+        if (e.attribution || e.kind !== 'change' || !e.channel || !src.reafferent.has(e.channel)) continue
+        if (sinceEnd > tail(e.timescale)) continue
+        if (src.channel === 'mind.active' && e.channel.startsWith('brain.') && busy > Math.max(own, 1)) continue
+        e.attribution = 'self'
+        e.salience *= this.cfg.efferenceDiscount
+      }
     }
   }
 

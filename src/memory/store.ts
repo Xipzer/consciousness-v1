@@ -45,6 +45,8 @@ export class Store {
   private migrate() {
     const cols = (this.db.query('PRAGMA table_info(events)').all() as { name: string }[]).map((c) => c.name)
     if (!cols.includes('attribution')) this.db.exec('ALTER TABLE events ADD COLUMN attribution TEXT')
+    const tcols = (this.db.query('PRAGMA table_info(thoughts)').all() as { name: string }[]).map((c) => c.name)
+    if (!tcols.includes('interrupt_ms')) this.db.exec('ALTER TABLE thoughts ADD COLUMN interrupt_ms REAL')
   }
 
   insertEvents(events: CoreEvent[]) {

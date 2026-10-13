@@ -139,7 +139,11 @@ export const enforceRetention = (
       continue
     }
     if (existsSync(p('.bin'))) {
-      writeFileSync(p('.bin.zst'), Bun.zstdCompressSync(readFileSync(p('.bin')), { level: 6 }))
+      const raw = readFileSync(p('.bin'))
+      const zst = Bun.zstdCompressSync(raw, { level: 6 })
+      writeFileSync(p('.bin.zst'), zst)
+      const manifest = JSON.parse(readFileSync(p('.json'), 'utf8'))
+      writeFileSync(p('.json'), JSON.stringify({ ...manifest, rawBytes: raw.length, zstBytes: zst.length }))
       unlinkSync(p('.bin'))
       rep.compressed.push(key)
     }

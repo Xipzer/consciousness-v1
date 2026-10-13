@@ -135,6 +135,30 @@ describe('corollary discharge', () => {
   })
 })
 
+test('housekeeping efference attributes main-loop lag only while chores run', () => {
+  const chans: ChannelDef[] = [
+    { name: 'self.main_lag_ms', unit: 'ms', periodS: 0.5, minSigma: 0.2 },
+    { name: 'self.housekeeping', unit: 'n', periodS: 3600, minSigma: 0.5 },
+  ]
+  const run = (on: boolean, choreAt: number | null, spikeAt: number) => {
+    const core = new Core(chans, loadConfig({ efferenceHousekeeping: on }), { instanceId: 'x', birthWall: 0 })
+    const r = rng(4)
+    const latest: Latest = new Map()
+    const events: CoreEvent[] = []
+    for (let k = 0; k < 1800; k++) {
+      const t = k / 10
+      if (k % 5 === 0) latest.set('self.main_lag_ms', { value: (t >= spikeAt + 0.2 && t < spikeAt + 1.2 ? 40 : 0.4) + 0.05 * gauss(r), t })
+      if (choreAt !== null && k === choreAt * 10) latest.set('self.housekeeping', { value: 1, t })
+      if (choreAt !== null && k === choreAt * 10 + 5) latest.set('self.housekeeping', { value: 0, t })
+      events.push(...core.step(latest, t, 1e9 + t).events)
+    }
+    return events.filter((e) => e.channel === 'self.main_lag_ms' && e.tWall - 1e9 >= spikeAt - 1)
+  }
+  expect(run(true, 120, 120).every((e) => e.attribution === 'self')).toBe(true)
+  expect(run(false, 120, 120).some((e) => e.attribution === undefined && e.decision === 'wake')).toBe(true)
+  expect(run(true, 60, 150).some((e) => e.attribution === undefined)).toBe(true)
+})
+
 describe('memory', () => {
   test('chain detects tampering and continuity uses host uptime', () => {
     const dir = mkdtempSync(join(tmpdir(), 'cv1-'))

@@ -12,7 +12,7 @@ export interface Wake {
 const QUESTION = 'Something salient just happened to you. Report what changed, in which direction and when, and whether you are still.'
 
 export class Narrator {
-  private current: { ctrl: AbortController; salience: number } | null = null
+  private current: { ctrl: AbortController; salience: number; abortAt?: number } | null = null
 
   constructor(
     private readonly url: string,
@@ -24,6 +24,7 @@ export class Narrator {
     const salience = Math.max(...w.events.map((e) => e.salience))
     if (this.current) {
       if (salience < this.current.salience * 2) return this.record(w, 'dropped', null)
+      this.current.abortAt = performance.now()
       this.current.ctrl.abort()
     }
     void this.think(w, salience)
@@ -31,7 +32,8 @@ export class Narrator {
 
   private async think(w: Wake, salience: number) {
     const ctrl = new AbortController()
-    this.current = { ctrl, salience }
+    const me: { ctrl: AbortController; salience: number; abortAt?: number } = { ctrl, salience }
+    this.current = me
     this.sense('mind.active', 1)
     const nowWall = Date.now() / 1000
     const prompt = ask(renderFull(w.self, w.recent, nowWall), QUESTION)
@@ -44,18 +46,17 @@ export class Narrator {
         .query('INSERT INTO thoughts (t_start, t_end, trigger, prompt, output, status, tokens, mean_logprob, min_logprob, confidence) VALUES (?,?,?,?,?,?,?,?,?,?)')
         .run(tStart, Date.now() / 1000, JSON.stringify(w.events.map((e) => e.id)), prompt, r.content, 'done', r.tokens, r.meanLogprob, r.minLogprob, confidence)
     } catch (e) {
-      this.record(w, ctrl.signal.aborted ? 'interrupted' : `error: ${(e as Error).message.slice(0, 200)}`, tStart)
+      const interruptMs = me.abortAt === undefined ? null : performance.now() - me.abortAt
+      this.record(w, ctrl.signal.aborted ? 'interrupted' : `error: ${(e as Error).message.slice(0, 200)}`, tStart, interruptMs)
     } finally {
-      if (this.current?.ctrl === ctrl) {
-        this.current = null
-        this.sense('mind.active', 0)
-      }
+      if (this.current === me) this.current = null
+      this.sense('mind.active', 0)
     }
   }
 
-  private record(w: Wake, status: string, tStart: number | null) {
+  private record(w: Wake, status: string, tStart: number | null, interruptMs: number | null = null) {
     this.store.db
-      .query('INSERT INTO thoughts (t_start, t_end, trigger, status) VALUES (?,?,?,?)')
-      .run(tStart ?? Date.now() / 1000, Date.now() / 1000, JSON.stringify(w.events.map((e) => e.id)), status)
+      .query('INSERT INTO thoughts (t_start, t_end, trigger, status, interrupt_ms) VALUES (?,?,?,?,?)')
+      .run(tStart ?? Date.now() / 1000, Date.now() / 1000, JSON.stringify(w.events.map((e) => e.id)), status, interruptMs)
   }
 }

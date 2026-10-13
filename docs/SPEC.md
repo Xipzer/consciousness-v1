@@ -112,7 +112,7 @@ MEMORY: tick log (every tick) · events · episodes · thoughts · knowledge ◄
 - Sensors run at their own rates (some stream, some poll) and write into a latest-value table. The tick samples that
   table; it never waits for a sensor. The **age of each reading is itself a channel**, so a dead sensor is sensed
   as a change, not silently held.
-- Tick budget: compute under 5 ms at p99, no missed ticks under full thought load. Measured by test T9.
+- Tick budget: compute under 5 ms at p99, no missed ticks during normal operation. Measured passively by T9 (`bench/perf.ts`).
 
 ### 3.2 Engine contracts
 
@@ -322,7 +322,7 @@ trusted. Self-awareness is engineered from explicit state variables first and ac
 | T6 | Comparison | B0, B1, S on identical T1-T3 probes | same metrics, paired |
 | T7 | Calibration | state reports and task answers with confidence | Brier score, ECE; logprob confidence vs verbal confidence |
 | T8 | Self-prediction | before answering, predict own answer and whether it will be correct | accuracy vs an always-"correct" baseline |
-| T9 | Non-blocking | tick timing with 0, 1 and max threads generating | tick duration p50/p99, missed ticks, jitter |
+| T9 | Non-blocking | passive: tick timing, thought start and interrupt latency from daemon logs during normal operation (8.9) | tick duration p50/p99, missed ticks, start/interrupt latency |
 | T10 | Interruption | urgent event during a long thought | preemption latency, slot freed, resumed-thought quality |
 
 ### 8.4 Falsifiable predictions
@@ -336,7 +336,7 @@ trusted. Self-awareness is engineered from explicit state variables first and ac
 | P5 | S tells clean restart from twin or tampered history ≥ 90%; B0 and B1 are at chance | S at chance |
 | P6 | T4 acts are predictable from logged state above chance (AUC ≥ 0.7) and their mix follows the dial preset | acts unpredictable, or mix ignores dials |
 | P7 | Logprob-based confidence is better calibrated than verbal confidence | Brier not lower |
-| P8 | Tick p99 < 5 ms and zero missed ticks with all slots generating | any sustained tick misses |
+| P8 | Tick p99 < 5 ms and zero missed ticks during normal operation, measured passively (8.9) | any sustained tick misses |
 | **P0** | **Overall: S beats B1 on T1-T3 with non-overlapping CIs** | **B1 matches S: continuous Δ-state tracking adds nothing measurable over a heartbeat with snapshots, and the thesis, as built here, is not supported** |
 
 ### 8.5 v0 protocol (fixed before the first scored run)
@@ -376,7 +376,7 @@ reported with and without the host-uptime check, so it is visible which signal d
 | P3 | report hit rate on pulses and ramps, S minus L (paired); event level reported alongside |
 | P4 | change measure on every frozen tick; mid-freeze stillness flag with length within 20%; post-release length within 20% |
 | P5 | verdict accuracy over all T3 variants |
-| P8 | T9 on the live daemon: idle, 2 LLM slots generating, all CPU cores busy, both |
+| P8 | T9 on the live daemon (v0 run included induced load, since withdrawn; now passive, 8.9) |
 | P0 | report hit rate on all T1 stimuli, S vs B1, paired bootstrap CI and McNemar |
 
 ### 8.6 Implementation notes (v0)
@@ -426,35 +426,71 @@ Predictions: **P9** with efference on, self-channel wakes/min outside stimuli fa
 **P10** onset and release detection stay ≥ 90% in both conditions, with 0 missed ticks. External wake rate and report
 accuracy are reported without a prediction.
 
-### 8.9 Stimulus sizing and thermal safety
-CPU burns caused a 96 C CPU peak and up to 524 W package power on the workstation (8-thread live-bench burns; the
-earlier T9 run also loaded all 32 threads for 4 minutes). The owner's rule, which replaces an interim hard ban:
-- **Size each stimulus to what the measurement needs.** The detector registers a CPU change in about 0.4 s, so a
-  20 s, 8-thread burn was far more than necessary. Short bursts, with idle gaps between them.
-- **Avoid long, sustained all-core load** on this compact machine. Full load is fine when a test genuinely needs it,
-  briefly.
-- **Thermal abort guard as a safety net**: a stimulus run kills its whole process group if CPU package or GPU
-  temperature exceeds 80 C. CPU temperature comes from HWiNFO shared memory (`scripts/cpu-thermal.ps1`); WSL exposes
-  none. A CPU stimulus refuses to start without a CPU reading (fail closed). Synthetic stimuli need no guard.
-- **Prefer non-thermal stimuli** where they measure the same thing: the synthetic `test.live` channel, injected into
-  the live loop through the local `/inject` endpoint.
-- No memory pressure or network disruption.
+### 8.9 Objective and what is never tested
+**Objective.** Build software that implements the functions the theory says constitute awareness, then show that
+(1) those functions are present, measured against ground truth rather than self-report alone; (2) they are caused by
+the components the theory names, because removing a component removes the predicted ability; and (3) the full system
+beats a bare LLM given identical inputs and questions.
+
+**Why hardware is irrelevant.** The theory is functionalist and multiply realisable: what matters is what the system
+does, not what it runs on. Testing the substrate would contradict the theory under test. The machine's sensors are a
+convenient sense stream, and the architecture must behave the same whether its senses are CPU telemetry, audio or
+scripted numbers. **This project does not benchmark or stress-test hardware, ever. Induced CPU or GPU load is never a
+valid stimulus or test.** (An earlier run used CPU burns and reached a 96 C CPU peak and 524 W; that stimulus and the
+T9 saturation phases were removed for good.)
+
+**What is validated:** change awareness (detection, latency, magnitude, direction, onset and release, down to small
+steps); temporal awareness (freeze, gaps, continuity across restarts); attention and salience (important external
+changes beat noise and the system's own activity); self versus other (efference); truthful, calibrated self-report;
+explainable spontaneity; component necessity through ablations; bare-LLM comparison; and the software performance of
+the architecture itself (tick latency and jitter, thought start and interrupt latency, storage growth), measured
+passively from daemon logs during normal operation (`bench/perf.ts`).
+
+**Method.** Primary: replayed recorded streams plus scripted, seeded synthetic sense channels with exact ground truth
+(steps from large to small, pulses, ramps, quiet periods for false alarms), in simulation (`test.a`) or injected into
+the live loop (`test.live` through `/inject`). Secondary: real events that happen on the machine anyway, already
+timestamped, scored after the fact. Pre-register before scoring, keep held-out seeds, disclose every protocol change.
 
 ### 8.10 Live benchmark v0.2 (fixed before its scored run)
 Same ABBA design as 8.8 (efference on, off, off, on), with a fresh daemon per block, 90 s warm-up and 8 trials per
 block. Stimulus: `test.live` carries unit Gaussian noise at 10 Hz; each trial steps it by ±3 sd (random sign) for
 15 s after 30-45 s of quiet, then `/ask` is queried about `test.live` 8 s after release. Direction-specific
 habituation (an up event no longer habituates a later down event on the same channel) is on in every block; it is
-held constant, so it is not part of the efference comparison. CPU pulses are optional (`--cpu=THREADSxSECONDS`) and run
-only with a CPU temperature reading; they are off in this run.
+held constant, so it is not part of the efference comparison.
 
-Metrics as in 8.8, for `test.live`. Self-channel wakes are counted both over the whole scored period and outside
+**Disclosed restart.** The first attempt of this run was stopped after 3 trials of block 0, unscored: a bug was found
+in the efference copy. When a thought was interrupted, the counter was incremented twice and decremented once, so
+`mind.active` could stay at 1 forever and keep the self-attribution window open. That block had no interrupts, so it
+was unaffected. v0.1 run 1 (8.8) may have been affected, since interrupted thoughts were not exported; its efference
+numbers should be read with that caveat. The fix balances every start with an end
+(`test/narrator.test.ts` fails on the old code and passes on the new). The scored run uses a fresh start.
+
+Metrics as in 8.8, for `test.live`. (The optional CPU pulse mentioned in an earlier draft of this section was removed;
+see 8.9.) Self-channel wakes are counted both over the whole scored period and outside
 stimulus windows.
 
 Predictions: **P9b** efference on reduces self-channel wakes over the whole scored period by ≥ 50% against off.
 **P10b** onset and release of `test.live` are detected within 10 s in ≥ 90% of trials in both conditions, with 0
 missed ticks. **P11** the stimulus onset wakes a thought in ≥ 80% of trials in both conditions. Report accuracy is
 reported without a prediction.
+
+### 8.11 Housekeeping efference ablation (live)
+Own non-thinking work also perturbs the body: retention compression and storage accounting run on the main thread
+and write to disk. A second efference source, `self.housekeeping`, is raised around every chore. Inside its window
+(same timing rule as 3.10), `change` events on `self.main_lag_ms`, `self.tick_ms`, `body.disk.write` and
+`body.disk.read` are attributed to self, logged and never wake. Ablation: an ABBA live run with housekeeping every
+60 s (`CV1_HOUSEKEEPING_S=60`, a scripted rate so chores occur often enough to score), thought efference on in every
+block, housekeeping efference on/off, the same synthetic trials as 8.10.
+**P12** housekeeping efference on reduces wakes on those four channels within 20 s of a chore by ≥ 50%, with no
+loss of `test.live` onset or release detection.
+
+### 8.12 Component ablations in replay (primary method)
+`bench/ablate.ts` replays the recorded body with a scripted `test.a` channel (seeded, ground truth exact): held steps
+of 1, 1.5, 2, 3, 5 and 8 sd with release after 15 s, 1 s pulses, 60 s ramps and null windows. It scores event-level
+onset and release detection and latency, wakes and false alarms for: full; direction-specific habituation off;
+no-delta. Seeds 1-2 are for development, held-out seeds 5-6 are scored once.
+**P13** direction-specific habituation raises release detection by ≥ 20 points against channel-level habituation, with
+the false-alarm rate on null windows no more than 2 points higher.
 
 Passing shows functional properties on the listed functions. Under the functionalist stance in 1.2 that is the claim;
 the spec does not claim more than the battery measures.

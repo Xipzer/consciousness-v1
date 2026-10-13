@@ -23,7 +23,8 @@ bun test                    # unit tests for the core, continuity chain and stor
 bun bench/t1.ts             # change awareness: S vs heartbeat (B1) vs no-delta ablation (L)
 bun bench/t2.ts             # freeze and suspension
 bun bench/t3.ts             # continuity across restarts
-bun bench/t9.ts             # tick timing under load (needs the loop running)
+bun bench/perf.ts           # passive architecture performance from daemon logs
+bun bench/live.ts           # live ABBA run with the synthetic test.live channel
 ```
 
 Data lives in `data/` (tick log segments, SQLite). Full-resolution segments are compressed after their hour, kept

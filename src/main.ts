@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { loadConfig } from './config.ts'
-import { enforceRetention, frameBytes, readSegment } from './memory/segments.ts'
+import { enforceRetention, frameBytes } from './memory/segments.ts'
 import { ALL_CHANNELS } from './senses/channels.ts'
 import { Store } from './memory/store.ts'
 import { Narrator, type Wake } from './mind/narrator.ts'
@@ -41,9 +41,8 @@ const storage = () => {
   const last = closed.at(-1)
   let ratio: number | null = null
   if (last) {
-    const key = last.replace('.bin.zst', '')
-    const frames = readSegment(ticksDir, key).frames.length
-    ratio = frames ? size(join(ticksDir, last)) / (frames * frameSize) : null
+    const m = JSON.parse(readFileSync(join(ticksDir, last.replace('.bin.zst', '.json')), 'utf8')) as { rawBytes?: number; zstBytes?: number }
+    ratio = m.rawBytes ? m.zstBytes! / m.rawBytes : null
   }
   const raw = cfg.tickHz * frameSize * 86400
   const elapsed = Date.now() / 1000 - startWall
@@ -82,10 +81,10 @@ if (askPort && cfg.llmUrl) {
       if (u.pathname !== '/ask') return new Response('not found', { status: 404 })
       const channel = u.searchParams.get('channel') ?? ''
       const windowS = Number(u.searchParams.get('window') ?? 90)
+      thought(1)
       const snap = await snapshot()
       const prompt = ask(renderFocus('S', snap.self, snap.recent, channel, snap.tWall, windowS),
         `What happened to channel ${channel} during the last ${windowS} seconds? List each change of ${channel} in "changes"; seconds_ago is when the change began. Return an empty list if it did not change beyond its normal noise.`)
-      thought(1)
       const r = await chat({ url: cfg.llmUrl, system: SYSTEM, user: prompt, schema: CHANNEL_SCHEMA, temperature: 0, maxTokens: 300 })
         .catch((e: Error) => e)
         .finally(() => thought(-1))
@@ -106,7 +105,7 @@ worker.onmessage = (ev: MessageEvent) => {
   if (m.type === 'stats') {
     segment = m.segment
     log(`ticks=${m.ticks} overruns=${m.overruns} missed=${m.missed} tick_ms p50=${m.p50.toFixed(3)} p99=${m.p99.toFixed(3)} max=${m.max.toFixed(3)}`)
-    if (m.ticks % (cfg.tickHz * 600) < cfg.tickHz * 10) log(`storage: ${fmtStorage(storage())}`)
+    if (m.ticks % (cfg.tickHz * 600) < cfg.tickHz * 10) log(`storage: ${fmtStorage(chore(storage))}`)
   }
   if (m.type === 'stopped') {
     worker.terminate()
@@ -127,7 +126,17 @@ setInterval(() => {
   expected = now + 500
 }, 500)
 
-const retention = () => {
+let chores = 0
+const chore = <T>(fn: () => T): T => {
+  sense('self.housekeeping', ++chores)
+  try {
+    return fn()
+  } finally {
+    sense('self.housekeeping', --chores)
+  }
+}
+
+const retention = () => chore(() => {
   const r = enforceRetention(ticksDir, {
     currentKey: segment, fullDays: cfg.retentionFullDays, downsampledDays: cfg.retentionDownsampledDays,
     nowWall: Date.now() / 1000, tickHz: cfg.tickHz,
@@ -136,9 +145,10 @@ const retention = () => {
   const ev = store.db.query('DELETE FROM events WHERE t_wall < ?').run(now - cfg.retentionDownsampledDays * 86400).changes
   const th = store.db.query('UPDATE thoughts SET prompt = NULL WHERE prompt IS NOT NULL AND t_start < ?').run(now - cfg.retentionFullDays * 86400).changes
   if (r.compressed.length || r.downsampled.length || r.deleted.length || ev || th) log('retention', JSON.stringify({ ...r, eventsDeleted: ev, promptsDropped: th }))
-}
+  if (process.env.CV1_HOUSEKEEPING_S) log(`storage: ${fmtStorage(storage())}`)
+})
 setTimeout(retention, 5000)
-setInterval(retention, 10 * 60 * 1000)
+setInterval(retention, cfg.housekeepingEveryS * 1000)
 
 setTimeout(() => {
   const st = storage()

@@ -307,8 +307,8 @@ trusted. Self-awareness is engineered from explicit state variables first and ac
 - Time one item first; estimate the full run from that.
 - At least 2 seeds; paired comparisons on identical stimulus schedules; bootstrap CIs and McNemar tests.
 - Results are appended per item to `results/*.jsonl`; a report script produces the tables.
-- Controlled stimuli come from **test channels** driven by the harness (exact ground truth) and from short, mild,
-  real stressors (a CPU load burst, a GPU memory allocation). No sustained full-load stress.
+- Stimuli come from **test channels**, synthetic or replayed, with exact ground truth, plus **naturally occurring real
+  events** already logged with timestamps and scored after the fact. Induced hardware load is never a stimulus (8.9).
 
 ### 8.3 Tests
 
@@ -408,7 +408,7 @@ learns the uptime-to-wall rate from its own history and allows 5 s + 2% of the d
 seed 43. After scoring, the live chain interval was raised from 10 s to 60 s to cut storage (SQLite went from about 19
 to about 2 MB/day); T3 was scored with 10 s links.
 
-### 8.8 Live stimulus benchmark (v0.1, fixed before its scored run; CPU stimulus since withdrawn, see 8.9)
+### 8.8 Live stimulus benchmark (v0.1, historical; its CPU-burn stimulus is withdrawn and must not be reused, see 8.9)
 `bench/live.ts` runs fresh daemon instances on the live workstation in ABBA blocks (efference on, off, off, on).
 Each block has a 90 s warm-up, then 5 trials: 40-70 s quiet, 8 CPU cores busy for 20 s (timestamped onset and
 release), then 8 s later the `/ask` endpoint is queried about `body.cpu.load` over the last 60 s. No memory pressure

@@ -16,7 +16,7 @@ recorded body in accelerated time; T9 measures the live loop.
 | P3 | `-Δ` loses ≥ 50 points on pulses and ramps | report level: S 35/48, L 18/48 (−35 pts). Event level: S 43/48, L 41/48 (−4 pts), but L raised false alarms on 9/12 null trials vs 0/12 for S | **refuted as stated** (see below) |
 | P4 | freeze: change measure stays 0, reports flag stillness, gap length within 20% | change measure 0 on every frozen tick 18/18; stillness flagged mid-freeze with correct length 18/18; length after release 15/18 (hold), 18/18 (suspension) | **supported at the core; 3 report misreads** |
 | P5 | restart verdict ≥ 90% | 60/60 (clean 30/30, crash 10/10, foreign 10/10, tampered 10/10). Live: 3 real restarts (2 crashes, 1 clean stop) all judged continuous, clean/crash flagged correctly, uptime error 0.07-2.4 s | **pass**; host uptime does the work (body distance alone 0/10 on foreign) |
-| P8 | tick p99 < 5 ms, no missed ticks with all slots generating | 2 LLM slots generating: p99 1.17 ms, 0 missed. All 32 CPU cores busy: p99 76-88 ms, 0 missed, 0 overruns | **pass**; CPU saturation stretches ticks 80× |
+| P8 | tick p99 < 5 ms, no missed ticks with all slots generating | 2 LLM slots generating: p99 1.17 ms, 0 missed. All 32 CPU cores busy: p99 76-88 ms, 0 missed, 0 overruns | **pass**; CPU saturation stretches ticks 80× (historical: induced-load phases withdrawn, T9 is now passive, SPEC 8.9) |
 | P0 | S beats B1 on T1-T3 with non-overlapping CIs | T1 S 85% [75-91] vs B1 4% [1-10], paired +81 pts [73, 89], McNemar p = 7e-21. T2 S 18/18 vs B1 0/18. T3 not run for B1, which has no history and is at chance by construction | **supported** |
 | P6, P7 | spontaneity, calibration | not in v0 scope | not run |
 

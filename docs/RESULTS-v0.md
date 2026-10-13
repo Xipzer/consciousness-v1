@@ -147,3 +147,27 @@ Bugs found and fixed during v0.2 (each disclosed in the spec):
 - **Budget rule ignored urgency**, contrary to spec R5.
 - **Clock channel emitted change events.**
 - **Mid-hour channel-layout change** would have corrupted the current tick segment; segments are now keyed by layout.
+
+### 8.14 Real generations (secondary validation, pre-registered)
+Replay of 6.0 h of the recorded body, scored against the narrator's own `thoughts` rows (88 generations ≥ 3 s).
+
+| Prediction | Efference on | Efference off | Verdict |
+|---|---|---|---|
+| P15a busy-slot onset within 3 s | 1/88 | 22/88 (median 2.1 s) | **refuted** |
+| P15b busy-slot release within 3 s | 0/88 | 1/88 | **refuted** |
+| P15c reafferent events in thought windows attributed to self, none waking | 1263/1278 (99%), 3 wakes | 0/1278, 130 wakes | **attribution passes; "no wakes" fails (3)** |
+
+What the failure shows:
+- **The ground truth was incomplete.** Benchmark probes generated on the same model server but are not thoughts, so
+  `brain.busy_slots` was often already 1-2 when a thought started. A post-hoc re-score (disclosed, not
+  pre-registered) restricted to the 51 thoughts with an idle model for the 2 s before them still gives onset 0/51
+  (on) and 20/51 (off), and release 0/51 in both.
+- **The z-score detector is poor for short pulses on a discrete channel that toggles often.** A 0 → 1 → 0 flag held
+  for 3-6 s and sampled at 1 Hz rarely reaches z 4 against a deviation sd inflated by frequent toggling.
+- **Efference sends attributed events below the ignore threshold.** The 0.1 discount pushes them under salience 2, so
+  they become `ignore` and leave the workspace. That contradicts 3.10, which says they stay there. This is why
+  onset goes from 22 to 1 with efference on.
+
+Proposed next fix (not yet implemented): a discrete-state detector for integer and boolean channels (`brain.up`,
+`brain.busy_slots`, `mind.active`), where every value change is an event; and attributed events are at least `log`,
+never `ignore`.

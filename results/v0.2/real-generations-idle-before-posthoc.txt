@@ -1,0 +1,6 @@
+efference on
+P15a onset of real generations (busy_slots up within 3 s): 0% [0-7] (0/51), median undefined s
+P15b release (down within 3 s of end): 0% [0-7] (0/51), median undefined s
+efference off
+P15a onset of real generations (busy_slots up within 3 s): 39% [27-53] (20/51), median 2.10 s
+P15b release (down within 3 s of end): 0% [0-7] (0/51), median undefined s

@@ -15,6 +15,9 @@ const t1 = bg.frames.at(-1)!.tWall
 const thoughts = (db.query("SELECT t_start, t_end, status FROM thoughts WHERE status IN ('done', 'interrupted') ORDER BY t_start").all() as { t_start: number; t_end: number; status: string }[])
   .filter((x) => x.t_start > t0 + 120 && x.t_end < t1)
 db.close()
+const IDLE_BEFORE = process.argv.includes('--idle-before')
+const busyIdx = bg.channels.indexOf('brain.busy_slots')
+const idleBefore = (t: number) => bg.frames.filter((f) => f.tWall >= t - 2 && f.tWall < t).every((f) => f.values[busyIdx] === 0)
 const reafferent = new Set(loadConfig().reafferent)
 const out = results('real')
 console.log(`recorded ${((t1 - t0) / 3600).toFixed(1)} h, ${bg.frames.length} frames; ${thoughts.length} thoughts inside coverage`)
@@ -40,7 +43,7 @@ const report: Record<string, unknown> = {}
 for (const efference of [true, false]) {
   const events = run(efference)
   const busy = events.filter((e) => e.channel === 'brain.busy_slots' && e.kind === 'change' && e.decision !== 'ignore')
-  const scored = thoughts.filter((x) => x.t_end - x.t_start >= MIN_S)
+  const scored = thoughts.filter((x) => x.t_end - x.t_start >= MIN_S && (!IDLE_BEFORE || idleBefore(x.t_start)))
   const onset = scored.map((x) => busy.find((e) => e.direction === 1 && e.tWall >= x.t_start - 0.5 && e.tWall <= x.t_start + TOL_S))
   const release = scored.map((x) => busy.find((e) => e.direction === -1 && e.tWall >= x.t_end - 0.5 && e.tWall <= x.t_end + TOL_S))
   const inWin = (t: number) => thoughts.some((x) => t >= x.t_start && t <= x.t_end + TAIL_S)

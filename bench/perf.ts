@@ -39,4 +39,14 @@ if (existsSync(dbPath)) {
   console.log(`interrupt latency ms (abort to slot released): ${interrupts.length ? `p50 ${q(interrupts, 0.5).toFixed(1)}, max ${Math.max(...interrupts).toFixed(1)}, n=${interrupts.length}` : 'no interrupts logged since interrupt_ms was added'}`)
   db.close()
 }
+if (existsSync(dbPath)) {
+  const db = new Database(dbPath, { readonly: true })
+  const spans = (db.query('SELECT t_start, t_end FROM thoughts WHERE t_end > t_start').all() as { t_start: number; t_end: number }[]).map((x) => [x.t_start * 1000, x.t_end * 1000] as const)
+  db.close()
+  const busy = (t: number) => spans.some(([a, b]) => a < t && b > t - 10_000)
+  for (const [label, ws] of [['windows with a thought generating', stats.filter((s) => busy(s.t))], ['windows without', stats.filter((s) => !busy(s.t))]] as const) {
+    if (!ws.length) continue
+    console.log(`${label}: n=${ws.length}, median p99 ${q(ws.map((s) => s.p99), 0.5).toFixed(3)} ms, 99th pct p99 ${q(ws.map((s) => s.p99), 0.99).toFixed(3)} ms, worst ${Math.max(...ws.map((s) => s.max)).toFixed(3)} ms`)
+  }
+}
 for (const l of logs.split('\n').filter((l) => l.includes('storage:')).slice(-3)) console.log(l)

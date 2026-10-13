@@ -444,7 +444,10 @@ steps); temporal awareness (freeze, gaps, continuity across restarts); attention
 changes beat noise and the system's own activity); self versus other (efference); truthful, calibrated self-report;
 explainable spontaneity; component necessity through ablations; bare-LLM comparison; and the software performance of
 the architecture itself (tick latency and jitter, thought start and interrupt latency, storage growth), measured
-passively from daemon logs during normal operation (`bench/perf.ts`).
+passively from daemon logs during normal operation (`bench/perf.ts`), overall and split into windows with and
+without a thought generating. The claim is that the tick stays on time during the machine's real life. Saturating
+every thread with spin loops would only measure the OS scheduler sharing the CPU among more runnable threads than
+cores: an artificial worst case, not a property of this design.
 
 **Method.** Primary: replayed recorded streams plus scripted, seeded synthetic sense channels with exact ground truth
 (steps from large to small, pulses, ramps, quiet periods for false alarms), in simulation (`test.a`) or injected into

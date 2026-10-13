@@ -57,7 +57,11 @@ Paired on stimuli: S vs L +39 pts [27, 51], McNemar p = 1e-8.
 - Tick compute: p50 0.06 ms, p99 ≈ 0.3-1.7 ms idle and under LLM load; 0 missed ticks so far.
 - Storage: tick log 224 B/frame, about 182 MB/day raw, compressed 3.6× by zstd on hourly rotation (about 51 MB/day).
   SQLite measured about 19 MB/day with a chain link every 10 s, mostly the links' JSON vectors; links are now every
-  60 s (about 2 MB/day). The WAL is capped near 4 MB. Retention: full resolution 7 days,
+  60 s (about 2 MB/day). The WAL is capped near 4 MB.
+- First live hour (idle machine, final code): 78.6 MB/day measured before compression. Tick log alone 2.06 MB/h
+  compressed (about 50 MB/day). SQLite about 13 MB/day, mostly stored thought prompts (92 thoughts/h). Steady state
+  is about 63 MB/day: roughly 440 MB at the 7-day full-resolution cap, plus about 5 MB/day downsampled. 36,400 ticks,
+  0 missed, p99 at most 1 ms. Retention: full resolution 7 days,
   1 Hz to 90 days, then deleted; events older than 90 days and thought prompts older than 7 days are pruned.
 - This host's uptime and monotonic clocks run about 4.4% slower than its wall clock (30.0 s vs 31.4 s measured).
 - Background event rate on the live body: about 43 logged events/min and 1.6-1.9 thought wakes/min under bench load.

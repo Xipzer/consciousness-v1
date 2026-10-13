@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { mkdtempSync, existsSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { loadConfig, type Mode } from '../src/config.ts'
+import { type Config, loadConfig, type Mode } from '../src/config.ts'
 import { assessContinuity, verifyChain } from '../src/core/continuity.ts'
 import { Core } from '../src/core/core.ts'
 import type { ChannelDef, CoreEvent, Latest } from '../src/core/types.ts'
@@ -176,6 +176,32 @@ test('a housekeeping pulse (synchronous chore) opens the attribution window', ()
   }
   expect(run(true).every((e) => e.attribution === 'self' && e.decision !== 'wake')).toBe(true)
   expect(run(false).some((e) => e.decision === 'wake')).toBe(true)
+})
+
+test('discrete channels: every value change is an event; self-caused ones stay noticed', () => {
+  const chans: ChannelDef[] = [
+    { name: 'brain.busy_slots', unit: 'n', periodS: 1, minSigma: 0.5, discrete: true },
+    { name: 'mind.active', unit: 'n', periodS: 3600, minSigma: 0.5, discrete: true },
+  ]
+  const run = (cfg: Partial<Config>) => {
+    const core = new Core(chans, loadConfig(cfg), { instanceId: 'x', birthWall: 0 })
+    const latest: Latest = new Map()
+    const events: CoreEvent[] = []
+    for (let k = 0; k < 2000; k++) {
+      const t = k / 10
+      const thinking = t >= 150 && t < 154
+      if (k % 10 === 0) latest.set('brain.busy_slots', { value: thinking ? 1 : 0, t })
+      if (k === 1500) latest.set('mind.active', { value: 1, t })
+      if (k === 1540) latest.set('mind.active', { value: 0, t })
+      events.push(...core.step(latest, t, 1e9 + t).events.filter((e) => e.channel === 'brain.busy_slots'))
+    }
+    return events.filter((e) => e.decision !== 'ignore')
+  }
+  const full = run({})
+  expect(full.map((e) => [e.direction, Math.round(e.tWall - 1e9)])).toEqual([[1, 150], [-1, 154]])
+  expect(full.every((e) => e.attribution === 'self' && e.decision === 'log')).toBe(true)
+  expect(run({ noticeFloor: false }).length).toBe(0)
+  expect(run({ discreteDetector: false, efference: false }).length).toBeLessThan(2)
 })
 
 describe('memory', () => {

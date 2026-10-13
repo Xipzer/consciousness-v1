@@ -156,6 +156,12 @@ export class Core {
     s.readings++
 
     if (s.range) return this.updateLevelOnly(s, tWall, events)
+    const discrete = this.cfg.discreteDetector && !!s.def.discrete
+    if (discrete && !first && diff !== 0) {
+      events.push(this.event('change', tWall, {
+        channel: s.def.name, direction: diff > 0 ? 1 : -1, z: Math.abs(diff) / s.def.minSigma, delta: diff, value: s.value, discrete: true,
+      }, s.def.gain))
+    }
 
     const ts = this.cfg.timescalesS
     if (first) {
@@ -176,7 +182,7 @@ export class Core {
 
     const warm = s.readings * s.def.periodS >= WARMUP_S && s.readings > WARMUP_READINGS
     for (const scale of ['fast', 'medium'] as const) {
-      const z = warm && (this.cfg.surpriseOnClocks || !s.def.excludeFromChange) ? this.surprise(s, scale, tWall, events) : 0
+      const z = warm && !discrete && (this.cfg.surpriseOnClocks || !s.def.excludeFromChange) ? this.surprise(s, scale, tWall, events) : 0
       if (z >= this.cfg.surpriseZ) continue
       const dev = Math.min(Math.abs(s.ema[scale] - ref(s, scale)), NOISE_CLIP * this.devSd(s, scale))
       s.devVar[scale] += a(ts.slow) * (dev * dev - s.devVar[scale])
@@ -270,7 +276,10 @@ export class Core {
   private decide(e: CoreEvent, tMono: number) {
     const c = this.cfg
     const sig = `${e.kind}:${e.channel ?? '*'}`
-    if (e.salience < c.logSalience) return Object.assign(e, { decision: 'ignore', rule: 'R2' })
+    if (e.salience < c.logSalience) {
+      if (c.noticeFloor && (e.attribution === 'self' || e.discrete)) return Object.assign(e, { decision: 'log', rule: 'R2f' })
+      return Object.assign(e, { decision: 'ignore', rule: 'R2' })
+    }
     if (e.salience < c.wakeSalience) return Object.assign(e, { decision: 'log', rule: 'R3' })
     if (e.attribution === 'self') return Object.assign(e, { decision: 'log', rule: 'R3s' })
     const last = this.lastWake.get(sig)

@@ -8,7 +8,14 @@ import { loadBackground, pct, results } from './lib.ts'
 const MIN_S = 3
 const TOL_S = 3
 const TAIL_S = 18
-const bg = loadBackground()
+const iso = (k: string) => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3)
+const FROM = iso('from') ? Date.parse(iso('from')!) / 1000 : 0
+const TO = iso('to') ? Date.parse(iso('to')!) / 1000 : Infinity
+const VARIANTS: Record<string, Record<string, unknown>> = {
+  full: {}, 'no-discrete': { discreteDetector: false }, 'no-notice-floor': { noticeFloor: false }, 'efference-off': { efference: false },
+}
+const full = loadBackground()
+const bg = { ...full, frames: full.frames.filter((f) => f.tWall >= FROM && f.tWall <= TO) }
 const db = new Database('data/mind.db', { readonly: true })
 const t0 = bg.frames[0]!.tWall
 const t1 = bg.frames.at(-1)!.tWall
@@ -22,8 +29,8 @@ const reafferent = new Set(loadConfig().reafferent)
 const out = results('real')
 console.log(`recorded ${((t1 - t0) / 3600).toFixed(1)} h, ${bg.frames.length} frames; ${thoughts.length} thoughts inside coverage`)
 
-const run = (efference: boolean) => {
-  const core = new Core(ALL_CHANNELS, loadConfig({ efference }), { instanceId: 'real', birthWall: t0 })
+const run = (variant: string) => {
+  const core = new Core(ALL_CHANNELS, loadConfig(VARIANTS[variant]), { instanceId: 'real', birthWall: t0 })
   const latest: Latest = new Map()
   const events: CoreEvent[] = []
   for (const f of bg.frames) {
@@ -40,8 +47,8 @@ const run = (efference: boolean) => {
 }
 
 const report: Record<string, unknown> = {}
-for (const efference of [true, false]) {
-  const events = run(efference)
+for (const variant of Object.keys(VARIANTS)) {
+  const events = run(variant)
   const busy = events.filter((e) => e.channel === 'brain.busy_slots' && e.kind === 'change' && e.decision !== 'ignore')
   const scored = thoughts.filter((x) => x.t_end - x.t_start >= MIN_S && (!IDLE_BEFORE || idleBefore(x.t_start)))
   const onset = scored.map((x) => busy.find((e) => e.direction === 1 && e.tWall >= x.t_start - 0.5 && e.tWall <= x.t_start + TOL_S))
@@ -52,7 +59,7 @@ for (const efference of [true, false]) {
   const onLat = lat(onset, (i) => scored[i]!.t_start)
   const offLat = lat(release, (i) => scored[i]!.t_end)
   const row = {
-    efference, thoughtsScored: scored.length,
+    variant, thoughtsScored: scored.length,
     onsetDetected: onset.filter(Boolean).length, onsetMedianS: onLat[onLat.length >> 1] ?? null,
     releaseDetected: release.filter(Boolean).length, releaseMedianS: offLat[offLat.length >> 1] ?? null,
     reafferentEventsInThought: reaff.length, attributedSelf: reaff.filter((e) => e.attribution === 'self').length,
@@ -60,8 +67,8 @@ for (const efference of [true, false]) {
     totalWakesPerHour: +((events.filter((e) => e.decision === 'wake').length / ((t1 - t0) / 3600)).toFixed(1)),
   }
   out.write(row)
-  report[efference ? 'on' : 'off'] = row
-  console.log(`\nefference ${efference ? 'on' : 'off'}`)
+  report[variant] = row
+  console.log(`\n${variant}`)
   console.log(`P15a onset of real generations (busy_slots up within ${TOL_S} s): ${pct(row.onsetDetected, scored.length)}, median ${row.onsetMedianS?.toFixed(2)} s`)
   console.log(`P15b release (down within ${TOL_S} s of end): ${pct(row.releaseDetected, scored.length)}, median ${row.releaseMedianS?.toFixed(2)} s`)
   console.log(`P15c reafferent change events inside thought windows: ${row.reafferentEventsInThought}, attributed to self ${pct(row.attributedSelf, row.reafferentEventsInThought)}, wakes from them ${row.wakesFromThem}`)

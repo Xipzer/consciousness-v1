@@ -5,6 +5,7 @@ export interface ChannelDef {
   minSigma: number
   gain?: number
   excludeFromChange?: boolean
+  discrete?: boolean
 }
 
 export interface Reading {
@@ -31,6 +32,7 @@ export interface CoreEvent {
   salience: number
   attribution?: 'self'
   escalation?: boolean
+  discrete?: boolean
   decision: 'ignore' | 'log' | 'refractory' | 'budget' | 'wake'
   rule: string
 }

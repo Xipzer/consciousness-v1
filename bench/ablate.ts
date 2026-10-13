@@ -15,7 +15,7 @@ const VARIANTS: Record<string, Partial<Config>> = Object.fromEntries(
     full: {}, 'hab-channel': { habituationByDirection: false }, 'no-delta': { mode: 'no-delta' as const },
     'no-escalation': { escalation: false },
     'no-urgent': { urgentOverride: false },
-    'v0.2-arbiter': { escalation: false, urgentOverride: false, surpriseOnClocks: true },
+    'v0.2-arbiter': { escalation: false, urgentOverride: false, surpriseOnClocks: true, discreteDetector: false, noticeFloor: false },
   }[v] ?? (() => { throw new Error(`unknown variant ${v}`) })()]),
 )
 

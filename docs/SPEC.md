@@ -543,6 +543,25 @@ polled at 1 Hz. No load is induced; these events happened in normal operation.
   are attributed to self, and none of them wakes a thought. Efference off: the number of wakes they would cause is
   reported.
 
+### 8.15 Discrete-state detector and notice floor (pre-registered before held-out scoring)
+**Fix for 8.14.** Integer and boolean channels (`brain.up`, `brain.busy_slots`, `mind.active`, `self.housekeeping`)
+are marked discrete: every change of value is a `change` event (z = |Δ| / channel floor, `brain.up` gain 5), and the
+EWMA surprise path is skipped for them. **Notice floor**: an event that is self-attributed or discrete is at least
+`log`, never `ignore` (rule R2f). Habituation and attribution can still keep it from waking a thought, but they can no
+longer erase it from the workspace, as 3.10 already required.
+
+**Development** on the 8.14 recording (dev, already seen): onset 53/53 and release 53/53 for thoughts with an idle
+model beforehand; without the discrete detector 22/53 and 0/53; without the notice floor 0/53 and 0/53; with efference
+off, 138 wakes from reafferent events in thought windows against 3 with it on.
+
+**Held-out**: the main daemon runs this code in normal operation, with no benchmarks, for about 2 h starting 5 min
+after the commit that adds this section. `bench/real.ts --idle-before --from=<start>` then scores only that window,
+once. Predictions:
+- **P16a** onset ≥ 90% and **P16b** release ≥ 90% (busy-slot event within 3 s) for thoughts ≥ 3 s with an idle model
+  in the 2 s before.
+- **P16c** without the discrete detector, onset ≤ 50% and release ≤ 10%; without the notice floor, both ≤ 10%.
+- **P16d** with efference on, wakes from reafferent events in thought windows are ≤ 5% of the efference-off count.
+
 Passing shows functional properties on the listed functions. Under the functionalist stance in 1.2 that is the claim;
 the spec does not claim more than the battery measures.
 

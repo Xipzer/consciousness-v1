@@ -26,15 +26,15 @@ export const SELF: ChannelDef[] = [
 ]
 
 export const BRAIN: ChannelDef[] = [
-  ch('brain.up', 'bool', 1, 0.5),
-  ch('brain.busy_slots', 'n', 1, 0.5),
+  ch('brain.up', 'bool', 1, 0.5, { discrete: true, gain: 5 }),
+  ch('brain.busy_slots', 'n', 1, 0.5, { discrete: true }),
   ch('brain.gen_tok', 'tok', 1, 1),
 ]
 
 export const MIND: ChannelDef[] = [
-  ch('mind.active', 'n', 3600, 0.5),
+  ch('mind.active', 'n', 3600, 0.5, { discrete: true }),
   ch('mind.confidence', 'p', 3600, 0.01),
-  ch('self.housekeeping', 'n', 3600, 0.5),
+  ch('self.housekeeping', 'n', 3600, 0.5, { discrete: true }),
 ]
 
 export const TEST: ChannelDef[] = [ch('test.a', 'u', 0.1, 0.01), ch('test.live', 'u', 0.1, 0.01)]

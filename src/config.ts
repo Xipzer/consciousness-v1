@@ -25,6 +25,8 @@ export interface Config {
   escalation: boolean
   urgentOverride: boolean
   surpriseOnClocks: boolean
+  discreteDetector: boolean
+  noticeFloor: boolean
   urgentSalience: number
   escalationFactor: number
   efferenceHousekeeping: boolean
@@ -67,6 +69,8 @@ export const loadConfig = (overrides: Partial<Config> = {}): Config => ({
   urgentOverride: process.env.CV1_URGENT !== '0',
   urgentSalience: 16,
   surpriseOnClocks: false,
+  discreteDetector: process.env.CV1_DISCRETE !== '0',
+  noticeFloor: process.env.CV1_NOTICE_FLOOR !== '0',
 
   efferenceHousekeeping: process.env.CV1_EFFERENCE_HOUSEKEEPING !== '0',
   housekeepingReafferent: ['self.main_lag_ms', 'self.tick_ms', 'body.disk.write', 'body.disk.read'],

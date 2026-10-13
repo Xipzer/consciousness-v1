@@ -160,7 +160,7 @@ export class Core {
     if (discrete && !first && diff !== 0) {
       events.push(this.event('change', tWall, {
         channel: s.def.name, direction: diff > 0 ? 1 : -1, z: Math.abs(diff) / s.def.minSigma, delta: diff, value: s.value, discrete: true,
-      }, s.def.gain))
+      }, s.def.gain, undefined, s.def.attentionGain))
     }
 
     const ts = this.cfg.timescalesS
@@ -206,7 +206,7 @@ export class Core {
     if (out && !s.outOfRange) {
       events.push(this.event('change', tWall, {
         channel: s.def.name, direction: s.value > rg.mean ? 1 : -1, z, delta: s.value - rg.mean, value: s.value,
-      }, s.def.gain))
+      }, s.def.gain, undefined, s.def.attentionGain))
     }
     s.outOfRange = out
     return 0
@@ -230,12 +230,14 @@ export class Core {
     const exc = s.excursion[scale]
     if (s.armed[scale] && z >= this.cfg.surpriseZ) {
       s.armed[scale] = false
-      const e = this.event('change', tWall, fields, s.def.gain)
-      s.excursion[scale] = { z, dir, hab: z > 0 ? e.salience / ((s.def.gain ?? 1) * z) : 1 }
+      const e = this.event('change', tWall, fields, s.def.gain, undefined, s.def.attentionGain)
+      const attentionZ = this.attentionZ(z)
+      const totalGain = (s.def.gain ?? 1) * (this.cfg.attentionPolicy ? s.def.attentionGain ?? 1 : 1)
+      s.excursion[scale] = { z, dir, hab: attentionZ > 0 ? e.salience / (totalGain * attentionZ) : 1 }
       events.push(e)
     } else if (this.cfg.escalation && !s.armed[scale] && dir === exc.dir && z >= exc.z * this.cfg.escalationFactor) {
       exc.z = z
-      events.push(this.event('change', tWall, { ...fields, escalation: true }, s.def.gain, exc.hab))
+      events.push(this.event('change', tWall, { ...fields, escalation: true }, s.def.gain, exc.hab, s.def.attentionGain))
     }
     if (!s.armed[scale] && z < this.cfg.surpriseZ / 2) s.armed[scale] = true
     return z
@@ -263,12 +265,17 @@ export class Core {
     if (this.stillTicks === this.cfg.stillTicks) events.push(this.event('still', tWall, { durationS: tWall - this.stillSinceWall, z: 10 }))
   }
 
-  private event(kind: EventKind, tWall: number, f: Partial<CoreEvent>, gain = 1, excursionHab?: number): CoreEvent {
+  private attentionZ(z: number) {
+    if (!this.cfg.salienceCompression || z <= this.cfg.surpriseZ) return z
+    return this.cfg.surpriseZ + this.cfg.surpriseZ * Math.log2(z / this.cfg.surpriseZ)
+  }
+
+  private event(kind: EventKind, tWall: number, f: Partial<CoreEvent>, gain = 1, excursionHab?: number, attentionGain = 1): CoreEvent {
     const sig = `${kind}:${f.channel ?? '*'}${this.cfg.habituationByDirection ? `:${f.direction ?? 0}` : ''}`
     const now = tWall
     const hab = this.habituation.get(sig) ?? { h: 1, t: now }
     const recovered = excursionHab ?? 1 - (1 - hab.h) * Math.exp(-(now - hab.t) / this.cfg.habituationRecoverS)
-    const salience = gain * (f.z ?? 0) * recovered
+    const salience = gain * (this.cfg.attentionPolicy ? attentionGain : 1) * this.attentionZ(f.z ?? 0) * recovered
     if (excursionHab === undefined) this.habituation.set(sig, { h: recovered * this.cfg.habituationDecay, t: now })
     return { id: `${this.identity.instanceId.slice(0, 8)}-${++this.eventSeq}`, tick: this.tick, tWall, kind, ...f, salience, decision: 'ignore', rule: '' }
   }

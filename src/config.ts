@@ -27,6 +27,8 @@ export interface Config {
   surpriseOnClocks: boolean
   discreteDetector: boolean
   noticeFloor: boolean
+  attentionPolicy: boolean
+  salienceCompression: boolean
   urgentSalience: number
   escalationFactor: number
   efferenceHousekeeping: boolean
@@ -71,6 +73,8 @@ export const loadConfig = (overrides: Partial<Config> = {}): Config => ({
   surpriseOnClocks: false,
   discreteDetector: process.env.CV1_DISCRETE !== '0',
   noticeFloor: process.env.CV1_NOTICE_FLOOR !== '0',
+  attentionPolicy: process.env.CV1_ATTENTION !== '0',
+  salienceCompression: process.env.CV1_SALIENCE_COMPRESSION !== '0',
 
   efferenceHousekeeping: process.env.CV1_EFFERENCE_HOUSEKEEPING !== '0',
   housekeepingReafferent: ['self.main_lag_ms', 'self.tick_ms', 'body.disk.write', 'body.disk.read'],

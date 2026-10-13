@@ -90,6 +90,22 @@ describe('core motion layer', () => {
   })
 })
 
+describe('attention policy', () => {
+  test('compresses extreme surprise and applies configured relevance', () => {
+    const channel: ChannelDef = { name: 'sense.x', unit: 'u', periodS: 1, minSigma: 1, discrete: true, attentionGain: 2 }
+    const event = (salienceCompression: boolean, attentionPolicy = true) => {
+      const core = new Core([channel], loadConfig({ salienceCompression, attentionPolicy }), { instanceId: 'x', birthWall: 0 })
+      const latest: Latest = new Map([['sense.x', { value: 0, t: 0 }]])
+      core.step(latest, 0, 1e9)
+      latest.set('sense.x', { value: 100, t: 1 })
+      return core.step(latest, 1, 1e9 + 1).events.find((e) => e.channel === 'sense.x')!
+    }
+    expect(event(true).salience).toBeCloseTo(2 * (4 + 4 * Math.log2(25)))
+    expect(event(true, false).salience).toBeCloseTo(4 + 4 * Math.log2(25))
+    expect(event(false).salience).toBe(200)
+  })
+})
+
 describe('corollary discharge', () => {
   const chans: ChannelDef[] = [
     { name: 'body.gpu.util', unit: '%', periodS: 0.1, minSigma: 1 },

@@ -15,7 +15,10 @@ const VARIANTS: Record<string, Partial<Config>> = Object.fromEntries(
     full: {}, 'hab-channel': { habituationByDirection: false }, 'no-delta': { mode: 'no-delta' as const },
     'no-escalation': { escalation: false },
     'no-urgent': { urgentOverride: false },
-    'v0.2-arbiter': { escalation: false, urgentOverride: false, surpriseOnClocks: true, discreteDetector: false, noticeFloor: false },
+    'no-priority': { attentionPolicy: false },
+    'no-compression': { salienceCompression: false },
+    'old-attention': { attentionPolicy: false, salienceCompression: false },
+    'v0.2-arbiter': { escalation: false, urgentOverride: false, surpriseOnClocks: true, discreteDetector: false, noticeFloor: false, attentionPolicy: false, salienceCompression: false },
   }[v] ?? (() => { throw new Error(`unknown variant ${v}`) })()]),
 )
 

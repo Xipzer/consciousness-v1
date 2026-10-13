@@ -4,6 +4,7 @@ export interface ChannelDef {
   periodS: number
   minSigma: number
   gain?: number
+  attentionGain?: number
   excludeFromChange?: boolean
   discrete?: boolean
 }

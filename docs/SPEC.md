@@ -562,6 +562,38 @@ once. Predictions:
 - **P16c** without the discrete detector, onset ≤ 50% and release ≤ 10%; without the notice floor, both ≤ 10%.
 - **P16d** with efference on, wakes from reafferent events in thought windows are ≤ 5% of the efference-off count.
 
+### 8.16 Attention against routine bursts (pre-registered before implementation and scoring)
+**Diagnosis.** On development replay seeds 1-2, a 3 sd step reached salience 8.5-8.9, a ramp 10.3-11.4, and a
+1 s pulse only 2.7-5.0. Routine channels produced far larger outliers: disk read up to 1,741, disk write 149,
+main-loop lag 163 and tick time 128. Those events consume the global four-wakes-per-minute budget before an external
+sense changes. This is not attention: raw numerical surprise is being mistaken for relevance.
+
+**Policy.** This implements the salience formula in 3.4 rather than changing detection:
+- **Compressed surprise:** for z > 4, `z_attention = 4 + 4 log2(z / 4)`; below 4 it is z. A 4-to-8 sd
+  change still gains 4 priority points, while a numerical outlier cannot dominate linearly.
+- **Goal relevance (channel gain):** external sense/test channels 2.5; routine throughput (`disk.*`, `net.*`) and
+  own timing 0.2; GPU utilisation/power/memory and token throughput 0.5; CPU load and memory 0.75; thermal/body-health
+  and unclassified channels 1.0. These are configuration, not detector thresholds. Future senses declare their role.
+`attentionPolicy` and `salienceCompression` are independently ablatable. Historical T1-T3 benches pin both off.
+`bench/ablate.ts` scores the new policy on replay; seeds 1-2 are development and held-out seeds
+7-8 are scored once.
+
+- **P17a:** full policy wakes on 3 sd steps, 1 s pulses and 60 s ramps in at least 75% of trials for each kind;
+  the old policy wakes in at most 50% for each.
+- **P17b:** full policy has zero wakes on null windows and reduces background body/self wakes per minute by at least
+  40% versus old policy, to at most 1.0/min.
+- **P17c (necessity):** without goal relevance, aggregate wake rate over the three stimulus kinds drops by at least
+  20 points. Without compression, background wake rate rises by at least 50%, while stimulus wake rate improves by
+  no more than 10 points.
+- Detection and release metrics must not fall by more than 2 points: this is an arbiter change, not a detector change.
+
+**Development amendment, before held-out scoring.** Seeds 1-2 gave full-policy wake rates of 7/8 step, 6/8 pulse and
+7/8 ramp, versus 1/8, 0/8 and 2/8 under the old policy. Background wakes fell from 1.55 to 0.63/min and null alarms
+were 0/8. A separately budgeted external lane changed only one of 24 target trials and increased total background
+wakes (0.63 versus 0.34/min without lanes), so it failed to earn its complexity and was removed. External gain was
+calibrated from 2.0 to 2.5 on these development seeds to put short threshold-edge pulses safely above wake salience.
+The predictions above apply to the resulting two-part policy and remain frozen for seeds 7-8.
+
 Passing shows functional properties on the listed functions. Under the functionalist stance in 1.2 that is the claim;
 the spec does not claim more than the battery measures.
 

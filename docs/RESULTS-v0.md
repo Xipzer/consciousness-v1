@@ -190,3 +190,19 @@ self-caused changes in the workspace, and efference stops them waking thoughts.
 Also measured in the same window: the live system woke about 1.1 times a minute, almost all on routine disk and network
 bursts (disk read 31, net tx 28, disk write 18, net rx 15 in 2 h). That is the next attention target. The tick stayed
 on time (0 missed, p99 about 1 ms), and storage ran at about 55 MB/day compressed ticks plus 13 MB/day DB.
+
+### 8.16 Attention against routine bursts (held-out, pre-registered)
+Replay seeds 7-8, four repetitions per seed. The policy applies logarithmic compression to surprise and explicit
+goal-relevance gains after detection. Raw rows and the printed summary are in `results/v0.2/attention-heldout-seeds7-8.*`.
+
+| Prediction | Result | Verdict |
+|---|---|---|
+| P17a full policy wakes on each 3 sd kind ≥ 75%; old policy ≤ 50% | step 8/8 vs 1/8; 1 s pulse 6/8 vs 0/8; 60 s ramp 8/8 vs 2/8 | **pass** |
+| P17b zero null wakes; routine wakes down ≥ 40% to ≤ 1.0/min | null 0/8; body/self wakes 1.55 → 0.34/min (−78%) | **pass** |
+| P17c relevance and compression are necessary | no relevance: target wakes 22/24 → 3/24; no compression: routine wakes 0.34 → 0.67/min (+97%) with target wakes unchanged | **pass** |
+| Detection does not fall by > 2 points | onset and release counts identical in every ablation | **pass** |
+
+Development seeds initially included separate wake-budget lanes. They changed only one of 24 target outcomes and
+increased background waking, so they were removed before held-out scoring and the amendment was disclosed in SPEC
+8.16. The retained mechanism is smaller and each part has a measured contribution: relevance selects meaningful
+external change, while compression prevents numerical telemetry outliers from dominating that selection.

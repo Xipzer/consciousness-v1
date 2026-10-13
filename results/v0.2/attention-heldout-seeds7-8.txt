@@ -1,0 +1,15 @@
+P17 attention policy, held-out seeds 7-8, 4 repetitions per seed
+Command: bun bench/ablate.ts --seed0=7 --seeds=2 --reps=4 --variants=full,old-attention,no-priority,no-compression
+
+3 sd stimulus wake rate
+kind     full  old attention  no priority  no compression
+step     8/8   1/8            0/8          8/8
+pulse    6/8   0/8            0/8          6/8
+ramp     8/8   2/8            3/8          8/8
+aggregate 22/24 3/24          3/24          22/24
+
+Null-window false alarms: 0/8 for every variant.
+Background body/self wakes per minute:
+full 0.34 | old attention 1.55 | no priority 1.30 | no compression 0.67
+
+Onset and release detection were identical across all variants. P17a-c pass.

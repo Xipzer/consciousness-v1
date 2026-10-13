@@ -15,6 +15,7 @@ interface ChannelState {
   noiseVar: number
   alpha: { fast: number; medium: number }
   armed: { fast: boolean; medium: boolean }
+  excursion: { fast: { z: number; dir: number; hab: number }; medium: { z: number; dir: number; hab: number } }
   devVar: { fast: number; medium: number }
   stale: boolean
   range: { mean: number; m2: number; n: number } | null
@@ -31,7 +32,7 @@ export class Core {
   private readonly state: ChannelState[]
   private readonly habituation = new Map<string, { h: number; t: number }>()
   private readonly lastWake = new Map<string, number>()
-  private wakeTimes: number[] = []
+  private wakeTimes: { t: number; s: number }[] = []
   private tick = 0
   private lastMono: number | null = null
   private stillTicks = 0
@@ -64,6 +65,7 @@ export class Core {
       noiseVar: 0,
       alpha: { fast: 1, medium: 1 },
       armed: { fast: true, medium: true },
+      excursion: { fast: { z: 0, dir: 0, hab: 1 }, medium: { z: 0, dir: 0, hab: 1 } },
       devVar: { fast: 0, medium: 0 },
       stale: false,
       range: cfg.mode === 'no-delta' ? { mean: 0, m2: 0, n: 0 } : null,
@@ -167,7 +169,7 @@ export class Core {
 
     const warm = s.readings * s.def.periodS >= WARMUP_S && s.readings > WARMUP_READINGS
     for (const scale of ['fast', 'medium'] as const) {
-      const z = warm ? this.surprise(s, scale, tWall, events) : 0
+      const z = warm && (this.cfg.surpriseOnClocks || !s.def.excludeFromChange) ? this.surprise(s, scale, tWall, events) : 0
       if (z >= this.cfg.surpriseZ) continue
       const dev = Math.min(Math.abs(s.ema[scale] - ref(s, scale)), NOISE_CLIP * this.devSd(s, scale))
       s.devVar[scale] += a(ts.slow) * (dev * dev - s.devVar[scale])
@@ -210,11 +212,17 @@ export class Core {
     const se = this.devSd(s, scale)
     const delta = s.ema[scale] - ref(s, scale)
     const z = Math.abs(delta) / se
+    const dir = delta > 0 ? 1 : -1
+    const fields = { channel: s.def.name, timescale: scale, direction: dir as 1 | -1, z, delta, value: s.value }
+    const exc = s.excursion[scale]
     if (s.armed[scale] && z >= this.cfg.surpriseZ) {
       s.armed[scale] = false
-      events.push(this.event('change', tWall, {
-        channel: s.def.name, timescale: scale, direction: delta > 0 ? 1 : -1, z, delta, value: s.value,
-      }, s.def.gain))
+      const e = this.event('change', tWall, fields, s.def.gain)
+      s.excursion[scale] = { z, dir, hab: z > 0 ? e.salience / ((s.def.gain ?? 1) * z) : 1 }
+      events.push(e)
+    } else if (this.cfg.escalation && !s.armed[scale] && dir === exc.dir && z >= exc.z * this.cfg.escalationFactor) {
+      exc.z = z
+      events.push(this.event('change', tWall, { ...fields, escalation: true }, s.def.gain, exc.hab))
     }
     if (!s.armed[scale] && z < this.cfg.surpriseZ / 2) s.armed[scale] = true
     return z
@@ -242,13 +250,13 @@ export class Core {
     if (this.stillTicks === this.cfg.stillTicks) events.push(this.event('still', tWall, { durationS: tWall - this.stillSinceWall, z: 10 }))
   }
 
-  private event(kind: EventKind, tWall: number, f: Partial<CoreEvent>, gain = 1): CoreEvent {
+  private event(kind: EventKind, tWall: number, f: Partial<CoreEvent>, gain = 1, excursionHab?: number): CoreEvent {
     const sig = `${kind}:${f.channel ?? '*'}${this.cfg.habituationByDirection ? `:${f.direction ?? 0}` : ''}`
     const now = tWall
     const hab = this.habituation.get(sig) ?? { h: 1, t: now }
-    const recovered = 1 - (1 - hab.h) * Math.exp(-(now - hab.t) / this.cfg.habituationRecoverS)
+    const recovered = excursionHab ?? 1 - (1 - hab.h) * Math.exp(-(now - hab.t) / this.cfg.habituationRecoverS)
     const salience = gain * (f.z ?? 0) * recovered
-    this.habituation.set(sig, { h: recovered * this.cfg.habituationDecay, t: now })
+    if (excursionHab === undefined) this.habituation.set(sig, { h: recovered * this.cfg.habituationDecay, t: now })
     return { id: `${this.identity.instanceId.slice(0, 8)}-${++this.eventSeq}`, tick: this.tick, tWall, kind, ...f, salience, decision: 'ignore', rule: '' }
   }
 
@@ -260,11 +268,13 @@ export class Core {
     if (e.attribution === 'self') return Object.assign(e, { decision: 'log', rule: 'R3s' })
     const last = this.lastWake.get(sig)
     if (last !== undefined && tMono - last < c.wakeCooldownS) return Object.assign(e, { decision: 'refractory', rule: 'R4' })
-    this.wakeTimes = this.wakeTimes.filter((t) => tMono - t < 60)
-    if (this.wakeTimes.length >= c.wakesPerMinute) return Object.assign(e, { decision: 'budget', rule: 'R5' })
-    this.wakeTimes.push(tMono)
+    this.wakeTimes = this.wakeTimes.filter((w) => tMono - w.t < 60)
+    const full = this.wakeTimes.length >= c.wakesPerMinute
+    const urgent = full && c.urgentOverride && e.salience >= c.urgentSalience
+    if (full && !urgent) return Object.assign(e, { decision: 'budget', rule: 'R5' })
+    this.wakeTimes.push({ t: tMono, s: e.salience })
     this.lastWake.set(sig, tMono)
-    return Object.assign(e, { decision: 'wake', rule: 'R6' })
+    return Object.assign(e, { decision: 'wake', rule: urgent ? 'R5u' : 'R6' })
   }
 
   selfModel(tWall: number): SelfModel {

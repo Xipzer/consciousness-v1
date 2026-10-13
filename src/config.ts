@@ -22,6 +22,11 @@ export interface Config {
   narrator: boolean
   efference: boolean
   habituationByDirection: boolean
+  escalation: boolean
+  urgentOverride: boolean
+  surpriseOnClocks: boolean
+  urgentSalience: number
+  escalationFactor: number
   efferenceHousekeeping: boolean
   housekeepingReafferent: string[]
   housekeepingEveryS: number
@@ -57,6 +62,12 @@ export const loadConfig = (overrides: Partial<Config> = {}): Config => ({
   narrator: process.env.CV1_NARRATOR !== '0',
   efference: process.env.CV1_EFFERENCE !== '0',
   habituationByDirection: process.env.CV1_HAB_DIRECTION !== '0',
+  escalation: process.env.CV1_ESCALATION !== '0',
+  escalationFactor: 2,
+  urgentOverride: process.env.CV1_URGENT !== '0',
+  urgentSalience: 16,
+  surpriseOnClocks: false,
+
   efferenceHousekeeping: process.env.CV1_EFFERENCE_HOUSEKEEPING !== '0',
   housekeepingReafferent: ['self.main_lag_ms', 'self.tick_ms', 'body.disk.write', 'body.disk.read'],
   housekeepingEveryS: num('CV1_HOUSEKEEPING_S', 600),

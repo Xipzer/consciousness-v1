@@ -492,6 +492,33 @@ no-delta. Seeds 1-2 are for development, held-out seeds 5-6 are scored once.
 **P13** direction-specific habituation raises release detection by ≥ 20 points against channel-level habituation, with
 the false-alarm rate on null windows no more than 2 points higher.
 
+### 8.13 Arbiter salience fix (pre-registered before held-out scoring)
+**Diagnosis (live v0.2 run, 8.10, and replay dev seeds 1-2).** A 3 sd `test.live` step was detected and reported
+correctly in 15/16 trials but woke a thought in 0/16; in replay, even 8 sd steps woke 0/8. Cause: an event is
+emitted when z first crosses the threshold (4), so its salience is about 4-6 whatever the eventual size of the
+change; the wake threshold is 8. Secondary cause: R5 in the code blocked every wake once 4 had happened in a minute,
+while the spec says R5 applies only below an urgency threshold.
+
+**Fix.**
+- **Escalation**: while an excursion lasts (same direction, not yet re-armed), each time z doubles relative to the
+  last emitted value, an escalation event is emitted with the new z. Escalations use the habituation level from the
+  start of the excursion and do not habituate further, so salience follows the size of the change. At most about
+  log2(z_max/4) extra events per excursion.
+- **Urgent override (spec R5)**: a wake whose salience is ≥ 16 is not blocked by the per-minute budget.
+- **Clock channels** (`body.host.uptime`) no longer produce change events; they are clocks, not senses of change.
+  Historical benches (T1-T3) keep the old behaviour through config.
+- Tried in development and dropped because they did not earn their place: an event-rate "rarity" damping (it also
+  suppressed the stimulus channel) and budget displacement by relative salience (no measurable effect).
+
+**Scored on held-out replay seeds 5-6** with `bench/ablate.ts`, variants `full`, `no-escalation`, `no-urgent` and
+`v0.2-arbiter` (all three off):
+- **P14a** full wakes on held steps of 5 and 8 sd in ≥ 70% of trials; v0.2-arbiter in ≤ 10%.
+- **P14b** no-escalation wakes on those steps in ≤ 10% (escalation is necessary).
+- **P14c** full wakes on steps ≤ 2 sd and on null windows in ≤ 5%.
+- **P14d** body-channel wakes/min in the background are at most 1.3 × v0.2-arbiter.
+- Urgent override: no effect predicted on this set (dev showed none); reported.
+Known limit (dev): 3 sd steps woke 1/8, because routine disk and network bursts take the wake budget.
+
 Passing shows functional properties on the listed functions. Under the functionalist stance in 1.2 that is the claim;
 the spec does not claim more than the battery measures.
 

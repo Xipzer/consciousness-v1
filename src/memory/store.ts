@@ -45,20 +45,21 @@ export class Store {
   private migrate() {
     const cols = (this.db.query('PRAGMA table_info(events)').all() as { name: string }[]).map((c) => c.name)
     if (!cols.includes('attribution')) this.db.exec('ALTER TABLE events ADD COLUMN attribution TEXT')
+    if (!cols.includes('escalation')) this.db.exec('ALTER TABLE events ADD COLUMN escalation INTEGER')
     const tcols = (this.db.query('PRAGMA table_info(thoughts)').all() as { name: string }[]).map((c) => c.name)
     if (!tcols.includes('interrupt_ms')) this.db.exec('ALTER TABLE thoughts ADD COLUMN interrupt_ms REAL')
   }
 
   insertEvents(events: CoreEvent[]) {
     const q = this.db.prepare(
-      'INSERT OR REPLACE INTO events (id, tick, t_wall, kind, channel, timescale, direction, z, delta, value, duration_s, salience, decision, rule, attribution) VALUES ($id,$tick,$t,$kind,$ch,$ts,$dir,$z,$delta,$value,$dur,$sal,$dec,$rule,$attr)',
+      'INSERT OR REPLACE INTO events (id, tick, t_wall, kind, channel, timescale, direction, z, delta, value, duration_s, salience, decision, rule, attribution, escalation) VALUES ($id,$tick,$t,$kind,$ch,$ts,$dir,$z,$delta,$value,$dur,$sal,$dec,$rule,$attr,$esc)',
     )
     this.db.transaction(() => {
       for (const e of events) {
         q.run({
           $id: e.id, $tick: e.tick, $t: e.tWall, $kind: e.kind, $ch: e.channel ?? null, $ts: e.timescale ?? null,
           $dir: e.direction ?? null, $z: e.z ?? null, $delta: e.delta ?? null, $value: e.value ?? null,
-          $dur: e.durationS ?? null, $sal: e.salience, $dec: e.decision, $rule: e.rule, $attr: e.attribution ?? null,
+          $dur: e.durationS ?? null, $sal: e.salience, $dec: e.decision, $rule: e.rule, $attr: e.attribution ?? null, $esc: e.escalation ? 1 : null,
         })
       }
     })()

@@ -1,0 +1,51 @@
+2026-10-13T02:20:54.052Z block 0 efference=on: warm-up 90s
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":7.1},{"direction":"up","seconds_ago":23.6},{"direction":"up","seconds_ago":24}]
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":7},{"direction":"up","seconds_ago":24},{"direction":"down","seconds_ago":30.7},{"direction":"down","seconds_ago":55.1}]
+  synthetic 16.4s, report [{"direction":"up","seconds_ago":6.9},{"direction":"down","seconds_ago":40.6}]
+  synthetic 15.0s, report [{"direction":"up","seconds_ago":8.9},{"direction":"down","seconds_ago":24.2}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":6.6},{"direction":"up","seconds_ago":22.7}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":6.7},{"direction":"up","seconds_ago":22.4}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":6.6},{"direction":"up","seconds_ago":22.4}]
+  synthetic 16.6s, report [{"direction":"up","seconds_ago":6.9},{"direction":"down","seconds_ago":24.3}]
+{"factor":"efference","chores":0,"hkWakesAfterChore":0,"hkEventsAfterChore":0,"cond":"on","minutes":8.82,"missed":0,"wakes":6,"selfWakesAll":1,"selfWakesOutside":0,"selfWakesByChannel":{"self.tick_ms":1},"attributed":106,"thoughts":5}
+2026-10-13T02:31:13.139Z block 1 efference=off: warm-up 90s
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":6.9},{"direction":"up","seconds_ago":22.1},{"direction":"up","seconds_ago":22.5}]
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":7.3},{"direction":"up","seconds_ago":22.6}]
+  synthetic 16.5s, report [{"direction":"up","seconds_ago":7},{"direction":"down","seconds_ago":35.6}]
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":7.1},{"direction":"up","seconds_ago":24}]
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":7.5},{"direction":"up","seconds_ago":24}]
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":6.8},{"direction":"up","seconds_ago":24}]
+  synthetic 16.5s, report [{"direction":"up","seconds_ago":6.9},{"direction":"down","seconds_ago":23.8},{"direction":"down","seconds_ago":37.1}]
+  synthetic 16.5s, report [{"direction":"up","seconds_ago":7},{"direction":"down","seconds_ago":23.8}]
+{"factor":"efference","chores":1,"hkWakesAfterChore":0,"hkEventsAfterChore":0,"cond":"off","minutes":9,"missed":0,"wakes":23,"selfWakesAll":18,"selfWakesOutside":4,"selfWakesByChannel":{"body.gpu.util":6,"body.gpu.power":3,"body.gpu.temp":3,"brain.gen_tok":4,"self.tick_ms":1,"self.main_lag_ms":1},"attributed":0,"thoughts":21}
+2026-10-13T02:41:43.372Z block 2 efference=off: warm-up 90s
+  synthetic 15.0s, report [{"direction":"down","seconds_ago":7.4},{"direction":"up","seconds_ago":22},{"direction":"up","seconds_ago":22.7}]
+  synthetic 15.0s, report [{"direction":"up","seconds_ago":7.2},{"direction":"down","seconds_ago":22.6}]
+  synthetic 16.4s, report [{"direction":"down","seconds_ago":6.8},{"direction":"up","seconds_ago":24}]
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":7.2},{"direction":"up","seconds_ago":23.8}]
+  synthetic 16.5s, report [{"direction":"up","seconds_ago":7.1},{"direction":"down","seconds_ago":23.9}]
+  synthetic 16.5s, report [{"direction":"up","seconds_ago":6.3},{"direction":"down","seconds_ago":23.7}]
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":6.4},{"direction":"up","seconds_ago":23.9}]
+  synthetic 16.5s, report [{"direction":"up","seconds_ago":6.3},{"direction":"down","seconds_ago":23.9}]
+{"factor":"efference","chores":1,"hkWakesAfterChore":0,"hkEventsAfterChore":0,"cond":"off","minutes":9.15,"missed":0,"wakes":16,"selfWakesAll":11,"selfWakesOutside":1,"selfWakesByChannel":{"body.gpu.util":4,"body.gpu.power":2,"brain.gen_tok":5},"attributed":0,"thoughts":14}
+2026-10-13T02:52:22.368Z block 3 efference=on: warm-up 90s
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":7.4},{"direction":"up","seconds_ago":23.1},{"direction":"up","seconds_ago":24.1}]
+  synthetic 16.5s, report [{"direction":"up","seconds_ago":6.9},{"direction":"down","seconds_ago":24.2},{"direction":"down","seconds_ago":56.8}]
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":7.2},{"direction":"up","seconds_ago":24.2},{"direction":"up","seconds_ago":58.9}]
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":6.7},{"direction":"up","seconds_ago":23.9}]
+  synthetic 15.0s, report [{"direction":"up","seconds_ago":8.2},{"direction":"down","seconds_ago":24.1}]
+  synthetic 15.0s, report [{"direction":"up","seconds_ago":6.8},{"direction":"down","seconds_ago":22.2}]
+  synthetic 15.0s, report [{"direction":"up","seconds_ago":6.9},{"direction":"down","seconds_ago":22.2}]
+  synthetic 16.5s, report [{"direction":"down","seconds_ago":6.6},{"direction":"up","seconds_ago":24.1}]
+{"factor":"efference","chores":0,"hkWakesAfterChore":0,"hkEventsAfterChore":0,"cond":"on","minutes":8.76,"missed":0,"wakes":10,"selfWakesAll":0,"selfWakesOutside":0,"selfWakesByChannel":{},"attributed":158,"thoughts":9}
+
+## Live benchmark (synthetic step 3 sd for 15s)
+efference | kind | onset ≤10 s | median onset s | release ≤10 s | median release s | wake on stimulus | report onset | report release
+off | synthetic | 94% [72-99] (15/16) | 0.48 | 94% [72-99] (15/16) | 0.98 | 0% [0-19] (0/16) | 94% [72-99] (15/16) | 94% [72-99] (15/16)
+on | synthetic | 94% [72-99] (15/16) | 0.38 | 94% [72-99] (15/16) | 1.09 | 0% [0-19] (0/16) | 94% [72-99] (15/16) | 94% [72-99] (15/16)
+factor: efference
+
+efference | minutes | wakes | self-channel wakes (all) | per min | self-channel wakes outside stimuli | per min | thoughts | missed ticks
+off | 18.1 | 39 | 29 | 1.60 | 5 | 0.28 | 35 | 0
+on | 17.6 | 16 | 1 | 0.06 | 0 | 0.00 | 14 | 0
+results -> results/live-2026-10-13T022054.jsonl
